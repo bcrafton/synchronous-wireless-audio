@@ -3,7 +3,7 @@ import pyaudio
 import wave 
 
 #define stream chunk   
-num_bytes = 32768  
+num_bytes = 32000  
 
 #open a wav format music
 f = wave.open("C:\\Users\\Brian\\Desktop\\goat.wav","rb") 
@@ -20,7 +20,7 @@ data = f.readframes(num_bytes / f.getnchannels() / f.getsampwidth())
 
 counter = 0
 
-serverPort = 12016
+serverPort = 12000
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(('', serverPort))
 
