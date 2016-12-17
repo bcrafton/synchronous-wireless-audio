@@ -2,3 +2,5 @@ nmap library:
 https://github.com/savon-noir/python-libnmap
 run the install instructions:
 https://pypi.python.org/pypi/python-libnmap/0.6.1
+
+https://nmap.org/download.html#windows
