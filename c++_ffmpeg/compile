@@ -1,0 +1,5 @@
+PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure   --prefix="$HOME/ffmpeg_build"   --pkg-config-flags="--static"   --extra-cflags="-I$HOME/ffmpeg_build/include"   --extra-ldflags="-L$HOME/ffmpeg_build/lib"   --bindir="$HOME/bin"   --disable-gpl   --disable-libass   --disable-libfdk-aac   --disable-libfreetype   --disable-libmp3lame   --disable-libopus   --disable-libtheora   --disable-libvorbis   --disable-libvpx   --disable-libx264   --disable-libx265 
+PATH="$HOME/bin:$PATH" make
+make install
+gcc demuxing_decoding.c -L/home/brian/ffmpeg_build/lib -I/home/brian/ffmpeg_build/include -lavformat -lavcodec -lavutil -lswscale -lz -lm -pthread -ldl -lswresample
+./a.out in.mp3 out1 out2

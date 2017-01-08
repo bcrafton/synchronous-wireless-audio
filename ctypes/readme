@@ -1,0 +1,6 @@
+http://stackoverflow.com/questions/5081875/ctypes-beginner
+
+this was me exploring calling c code from python. so that way we can write ffmpeg code and simply call it once it is compiled
+
+compile:
+gcc -shared -Wl,-soname,testlib1 -o testlib1.so -fPIC testlib1.c
