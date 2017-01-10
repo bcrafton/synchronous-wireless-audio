@@ -3,3 +3,8 @@ PATH="$HOME/bin:$PATH" make
 make install
 gcc demuxing_decoding.c -L/home/brian/ffmpeg_build/lib -I/home/brian/ffmpeg_build/include -lavformat -lavcodec -lavutil -lswscale -lz -lm -pthread -ldl -lswresample
 ./a.out in.mp3 out1 out2
+
+
+gcc playwav.c -L/home/brian/ffmpeg_build/lib -I/home/brian/ffmpeg_build/include -L/home/brian/Desktop/SDL2-2.0.5/build/.libs/ -I/home/brian/Desktop/SDL2-2.0.5/include/ -lavformat -lavcodec -lavutil -lswscale -lz -lm -pthread -ldl -lswresample -lSDL2 -lpthread
+
+
