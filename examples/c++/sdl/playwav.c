@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 
-#define MUS_PATH "goat.wav"
+#define MUS_PATH "../goat.wav"
 
 // prototype for our audio callback
 // see the implementation for more information

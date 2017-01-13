@@ -1,0 +1,3 @@
+gcc playwav.c -L/home/brian/ffmpeg_build/lib -I/home/brian/ffmpeg_build/include -L/home/brian/Desktop/SDL2-2.0.5/build/.libs/ -I/home/brian/Desktop/SDL2-2.0.5/include/ -lavformat -lavcodec -lavutil -lswscale -lz -lm -pthread -ldl -lswresample -lSDL2 -lpthread
+
+

@@ -1,0 +1,6 @@
+if you fix a build error then:
+
+1. place the signiture here (so someone can grep for it)
+2. place your name
+3. what you were trying to do that caused the error.
+4. how you fixed it

@@ -55,14 +55,16 @@ int getData( int sockfd ) {
 }
 
 int main(int argc, char *argv[]) {
-     int sockfd, newsockfd, portno = 51717, clilen;
+     int sockfd, newsockfd, portno = 51200, clilen;
      char buffer[256];
      struct sockaddr_in serv_addr, cli_addr;
      int n;
      int data;
 
+     int x;
      printf( "using port #%d\n", portno );
-   
+     printf("%d\n", portno);
+     
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
      if (sockfd < 0)
          error( const_cast<char *>("ERROR opening socket") );
