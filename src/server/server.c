@@ -1,4 +1,6 @@
 
+#include "server.h"
+
 static char* ip_address_list = NULL;
 static char* filepath = NULL;
 
@@ -9,7 +11,7 @@ static int num_sockets;
 
 server_status_code_t start()
 {
-    return SUCCESS:
+    return SUCCESS;
 }
 
 server_status_code_t set_song(char* filepath)
@@ -19,6 +21,9 @@ server_status_code_t set_song(char* filepath)
 
 server_status_code_t set_devices(char* ip_address_list, char delimmeter)
 {   
-    return SUCCESS:
+    return SUCCESS;
 }
 
+int main()
+{
+}

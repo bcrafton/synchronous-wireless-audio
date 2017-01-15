@@ -1,5 +1,7 @@
 
-typedef enum server_status_code_t server_status_code_t
+#include <stdio.h>
+
+typedef enum server_status_code_t server_status_code_t;
 
 enum server_status_code_t{
     SUCCESS = 0,
