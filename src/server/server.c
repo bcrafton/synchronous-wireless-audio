@@ -1,6 +1,7 @@
 #DEFINE IP_ADDR_LEN 15
 #DEFINE MAX_DEVICES 100
 
+#include "server.h"
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdlib.h>
@@ -16,7 +17,9 @@ static int num_sockets;
 
 server_status_code_t start()
 {
-    return SUCCESS:
+    start_thread(run);
+
+    return SUCCESS;
 }
 
 server_status_code_t set_song(char* filepath)
@@ -74,5 +77,28 @@ server_status_code_t set_devices(char* ip_address_list, char delimmeter, int num
     clilen = sizeof(cli_addr);
 
     return SUCCESS:
+}
+
+int main()
+{
+}
+
+static int run()
+{
+    while(true)
+    {
+        if ( have_devices(devices) && have_data(stream) )
+        {
+            play();
+        }
+    }
+}
+
+static int play(devies, stream)
+{
+}
+
+static int send_data(devices, stream)
+{
 }
 
