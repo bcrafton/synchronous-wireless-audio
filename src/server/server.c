@@ -11,6 +11,8 @@ static int num_sockets;
 
 server_status_code_t start()
 {
+    start_thread(run);
+
     return SUCCESS;
 }
 
@@ -27,3 +29,27 @@ server_status_code_t set_devices(char* ip_address_list, char delimmeter)
 int main()
 {
 }
+
+static int run()
+{
+    while(true)
+    {
+        if ( have_devices(devices) && have_data(stream) )
+        {
+            play();
+        }
+    }
+}
+
+static int play(devies, stream)
+{
+}
+
+static int send_data(devices, stream)
+{
+}
+
+
+
+
+
