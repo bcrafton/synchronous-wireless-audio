@@ -33,26 +33,17 @@ server_status_code_t set_devices(char* ip_address_list, char delimmeter, int num
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
 
-    //Parse IP addr list
-    char ip_addr[IP_ADDR_LEN];
     char *ip_addr_array[MAX_DEVICES];
-    int local_counter, arg_counter;
+    int device_number = 1;
 
-    arg_counter = -1;
-    for (device_no = 0, device_no < MAX_DEVICES, device_no++)
+    //Parse IP addr list
+    ip = strtok(ip_addr_list, delimmeter);
+    strncpy(ip_addr_array[0], ip, IP_ADDR_LEN);
+    while (ip != NULL)
     {
-        local_counter = -1;
-        while(1)
-        {
-            local_counter++;
-            arg_counter++;
-
-            if (ip_address_list[arg_counter] != delimmeter)
-              ip_addr[local_counter] = ip_address_list[arg_counter];
-            else
-              break;
-        }
-        ip_addr_array[local_counter] = ip_addr;
+        ip = strtok(NULL, delimmeter);
+        strncpy(ip_addr_array[device_number], ip, IP_ADDR_LEN);
+        device_number++;
     }
 
     //open socket
