@@ -1,15 +1,4 @@
-/* A simple client program to interact with the myServer.c program on the Raspberry.
-myClient.c
-D. Thiebaut
-Adapted from http://www.cs.rpi.edu/~moorthy/Courses/os98/Pgms/socket.html
-The port number used in 51717.
-This code is compiled and run on the Macbook laptop as follows:
-   
-    g++ -o myClient myClient.c
-    ./myClient
 
-
-*/
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -27,40 +16,27 @@ void error(char *msg) {
     exit(0);
 }
 
-void sendData( int sockfd, int x ) {
-  int n;
+void sendData( int sockfd, void* buffer, unsigned int size ) 
+{
 
-  char buffer[32];
-  sprintf( buffer, "%d\n", x );
-  if ( (n = write( sockfd, buffer, strlen(buffer) ) ) < 0 )
-      error( const_cast<char *>( "ERROR writing to socket") );
-  buffer[n] = '\0';
-}
-
-int getData( int sockfd ) {
-  char buffer[32];
-  int n;
-
-  if ( (n = read(sockfd,buffer,31) ) < 0 )
-       error( const_cast<char *>( "ERROR reading from socket") );
-  buffer[n] = '\0';
-  return atoi( buffer );
+  int status = write( sockfd, buffer, size);
+  if (status < 0)
+  {
+    error( const_cast<char *>( "ERROR writing to socket") );
+  }
+  else
+  {
+    printf("Great Success!\n");
+  }
 }
 
 int main(int argc, char *argv[])
 {
     int sockfd, portno = 51200, n;
-    char serverIp[] = "10.0.0.80";
+    char serverIp[] = "192.168.0.100";
     struct sockaddr_in serv_addr;
     struct hostent *server;
-    char buffer[256];
-    int data;
 
-    if (argc < 3) {
-      // error( const_cast<char *>( "usage myClient2 hostname port\n" ) );
-      printf( "contacting %s on port %d\n", serverIp, portno );
-      // exit(0);
-    }
     if ( ( sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
         error( const_cast<char *>( "ERROR opening socket") );
 
@@ -74,12 +50,16 @@ int main(int argc, char *argv[])
     if ( connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
         error( const_cast<char *>( "ERROR connecting") );
 
-    for ( n = 0; n < 10; n++ ) {
-      sendData( sockfd, n );
-      data = getData( sockfd );
-      printf("%d ->  %d\n",n, data );
+    int* buffer = (int*) malloc(sizeof(int) * 100);
+    int i;
+    for(i=1; i<100; i++)
+    {
+      buffer[i] = i;
     }
-    sendData( sockfd, -2 );
+
+    sendData(sockfd, buffer, sizeof(int) * 100);
+
+    while(1);
 
     close( sockfd );
     return 0;
