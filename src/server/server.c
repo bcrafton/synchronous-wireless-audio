@@ -29,12 +29,12 @@ server_status_code_t set_song(char* filepath)
 
 server_status_code_t set_devices(char* ip_address_list, char delimmeter, int num_devices)
 {
-    int sockfd, newsock, portno, clilen;
+    int sockfd;
     char buffer[256];
-    struct sockaddr_in serv_addr, cli_addr;
-
+    struct sockaddr_in serv_addr;
+    struct hostent rpi_server[MAX_DEVICES];
     char *ip_addr_array[MAX_DEVICES];
-    int device_number = 1;
+    int dev_no = 1;
 
     //Parse IP addr list
     ip = strtok(ip_addr_list, delimmeter);
@@ -42,30 +42,31 @@ server_status_code_t set_devices(char* ip_address_list, char delimmeter, int num
     while (ip != NULL)
     {
         ip = strtok(NULL, delimmeter);
-        strncpy(ip_addr_array[device_number], ip, IP_ADDR_LEN);
-        device_number++;
+        strncpy(ip_addr_array[dev_no], ip, IP_ADDR_LEN);
+        dev_no++;
     }
 
-    //open socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0;
-    if (sockfd < 0)
-        return ERROR;
-    
-    //initialize socket struct
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = 51200;
+    for (dev_no=0; dev_no < num_devices; dev_no++)
+    {
+        //open socket
+        if ( ( sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
+            return ERROR;
+        //get host entity
+        if ( ( rpi_server[dev_no] = gethostbyname( ip_addr_array[dev_no] ) ) == NULL )
+            return ERROR;
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons( portno );
+        //init stuff
+        bzero( (char *) &serv_addr, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        bcopy( (char *)rpi_server[dev_no]->h_addr, (char *)&serv_addr.sin_addr.s_addr, rpi_server[dev_no]->h_length);
+        serv_addr.sin_port = htons(portno);
+        
+        //connect to rpi
+        if ( connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
+            return ERROR;
 
-    //bind socket
-    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-        return ERROR;
-
-    //Listen for clients
-    listen(sockfd,5);
-    clilen = sizeof(cli_addr);
+        //DO SEND/RECIEVE DATA TESTING HERE
+    }
 
     return SUCCESS:
 }
