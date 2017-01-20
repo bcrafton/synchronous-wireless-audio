@@ -1,24 +1,30 @@
-#DEFINE IP_ADDR_LEN 15
-#DEFINE MAX_DEVICES 100
+
 
 #include "server.h"
-#include <netinet/in.h>
-#include <netdb.h>
-#include <stdlib.h>
-#include <string.h>
 
-static char* ip_address_list = NULL;
-static char* filepath = NULL;
+static void *run(void*);
+static bool has_devices();
+static bool has_packets();
 
-// just making this 100 because itll never be that big
-// if someone wants to be this list resizeable then go for it
-static int sockfd[MAX_DEVICES];
-static int num_sockets;
+static pthread_t main_loop;
+static device_t* devices;
+static int num_devices;
+
+void error(char *msg) {
+    perror(msg);
+    exit(0);
+}
 
 server_status_code_t start()
 {
-    start_thread(run);
-
+	int ret = pthread_create( &main_loop, NULL, run, NULL);
+	if(ret)
+	{
+		fprintf(stderr,"Error - pthread_create() return code: %d\n", ret);
+		exit(EXIT_FAILURE);
+	}
+	// we do not want to wait for the thread to finish
+	pthread_join(main_loop, NULL);
     return SUCCESS;
 }
 
@@ -27,70 +33,112 @@ server_status_code_t set_song(char* filepath)
     return SUCCESS;
 }
 
-server_status_code_t set_devices(char* ip_address_list, char delimmeter, int num_devices)
+server_status_code_t send_data(void* buffer, unsigned int size) 
 {
-    int sockfd;
-    char buffer[256];
-    struct sockaddr_in serv_addr;
-    struct hostent rpi_server[MAX_DEVICES];
-    char *ip_addr_array[MAX_DEVICES];
-    int dev_no = 1;
-
-    //Parse IP addr list
-    ip = strtok(ip_addr_list, delimmeter);
-    strncpy(ip_addr_array[0], ip, IP_ADDR_LEN);
-    while (ip != NULL)
+    int i;
+    for(i=0; i<num_devices; i++)
     {
-        ip = strtok(NULL, delimmeter);
-        strncpy(ip_addr_array[dev_no], ip, IP_ADDR_LEN);
-        dev_no++;
+        int status = write( devices[i].sockfd, buffer, size);
+        if (status < 0)
+        {
+            error( const_cast<char *>( "ERROR writing to socket") );
+        }
+        else
+        {
+            printf("Great Success!\n");
+        }
+    }
+    return SUCCESS;
+}
+
+server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
+{
+    num_devices = num;
+
+    char** ip_address_list = (char**) malloc(sizeof(char*) * num_devices);
+
+    char* p = strtok(ip_addresses, &delimeter);
+    
+    int i;
+    for(i=0; i<num_devices; i++)
+    {
+        ip_address_list[i] = strdup(p);
+        p = strtok(NULL, &delimeter);
     }
 
-    for (dev_no=0; dev_no < num_devices; dev_no++)
+    devices = (device_t*) malloc(sizeof(device_t) * num_devices);
+   
+    for(i=0; i<num_devices; i++)
     {
-        //open socket
-        if ( ( sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
-            return ERROR;
-        //get host entity
-        if ( ( rpi_server[dev_no] = gethostbyname( ip_addr_array[dev_no] ) ) == NULL )
-            return ERROR;
+        if ( ( devices[i].sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
+        {
+            error( const_cast<char *>( "ERROR opening socket") );
+        }
+        if ( ( devices[i].server = gethostbyname( ip_address_list[i] ) ) == NULL )
+        {
+            error( const_cast<char *>("ERROR, no such host\n") );
+        }
 
-        //init stuff
-        bzero( (char *) &serv_addr, sizeof(serv_addr));
-        serv_addr.sin_family = AF_INET;
-        bcopy( (char *)rpi_server[dev_no]->h_addr, (char *)&serv_addr.sin_addr.s_addr, rpi_server[dev_no]->h_length);
-        serv_addr.sin_port = htons(portno);
-        
-        //connect to rpi
-        if ( connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
-            return ERROR;
+        bzero( (char *) &devices[i].serv_addr, sizeof(devices[i].serv_addr));
+        devices[i].serv_addr.sin_family = AF_INET;
+        bcopy( (char *)devices[i].server->h_addr, (char *)&devices[i].serv_addr.sin_addr.s_addr, devices[i].server->h_length);
+        devices[i].serv_addr.sin_port = htons(PORTNO);
 
-        //DO SEND/RECIEVE DATA TESTING HERE
+        if ( connect(devices[i].sockfd,(struct sockaddr *)&devices[i].serv_addr,sizeof(devices[i].serv_addr)) < 0)
+        {
+            error( const_cast<char *>( "ERROR connecting") );
+        }
     }
 
-    return SUCCESS:
+    return SUCCESS;
+}
+
+static bool has_devices()
+{
+	return true;
+}
+
+static bool has_packets()
+{
+	return true;
+}
+
+static void *run(void* user_data)
+{
+	assert(user_data == NULL);
+	printf("hit the main loop\n");
+
+	// grab the lock
+	// a lock needs to be grabbed so that setting devices and setting the song can be done 
+
+	if(has_packets() && has_devices())
+	{
+		// send the packets
+	}
 }
 
 int main()
 {
-}
+	start();
 
-static int run()
-{
-    while(true)
+	char ip_addresses[] = ";192.168.0.100;192.168.0.102";
+    char delimeter = ';';
+    set_devices(ip_addresses, delimeter, 1);
+
+    int* buffer = (int*) malloc(sizeof(int) * 100);
+    int i;
+    for(i=1; i<100; i++)
     {
-        if ( have_devices(devices) && have_data(stream) )
-        {
-            play();
-        }
+        buffer[i] = i;
     }
-}
 
-static int play(devies, stream)
-{
-}
+    send_data(buffer, sizeof(int) * 100);
 
-static int send_data(devices, stream)
-{
-}
+    //while(1);
 
+    for(i=0; i<num_devices; i++)
+    {
+        close( devices[i].sockfd );
+    }
+    return 0;
+}

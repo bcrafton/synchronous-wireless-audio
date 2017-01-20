@@ -1,15 +1,4 @@
-/* A simple client program to interact with the myServer.c program on the Raspberry.
-myClient.c
-D. Thiebaut
-Adapted from http://www.cs.rpi.edu/~moorthy/Courses/os98/Pgms/socket.html
-The port number used in 51717.
-This code is compiled and run on the Macbook laptop as follows:
-   
-    g++ -o myClient myClient.c
-    ./myClient
 
-
-*/
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -22,65 +11,102 @@ This code is compiled and run on the Macbook laptop as follows:
 #include <errno.h>
 #include <arpa/inet.h>
 
+#define PORTNO 51200
+
 void error(char *msg) {
     perror(msg);
     exit(0);
 }
 
-void sendData( int sockfd, int x ) {
-  int n;
+typedef struct sockaddr_in sockaddr_in;
+typedef struct hostent     hostent;
 
-  char buffer[32];
-  sprintf( buffer, "%d\n", x );
-  if ( (n = write( sockfd, buffer, strlen(buffer) ) ) < 0 )
-      error( const_cast<char *>( "ERROR writing to socket") );
-  buffer[n] = '\0';
+typedef struct device{
+    int sockfd;
+    hostent *server;
+    sockaddr_in serv_addr;
+} device_t;
+
+static device_t* devices;
+static int num_devices;
+
+void send_data(void* buffer, unsigned int size) 
+{
+    int i;
+    for(i=0; i<num_devices; i++)
+    {
+        int status = write( devices[i].sockfd, buffer, size);
+        if (status < 0)
+        {
+            error( const_cast<char *>( "ERROR writing to socket") );
+        }
+        else
+        {
+            printf("Great Success!\n");
+        }
+    }
 }
 
-int getData( int sockfd ) {
-  char buffer[32];
-  int n;
+void setup(char* ip_addresses, char delimeter, int num)
+{
+    num_devices = num;
 
-  if ( (n = read(sockfd,buffer,31) ) < 0 )
-       error( const_cast<char *>( "ERROR reading from socket") );
-  buffer[n] = '\0';
-  return atoi( buffer );
+    char** ip_address_list = (char**) malloc(sizeof(char*) * num_devices);
+
+    char* p = strtok(ip_addresses, &delimeter);
+    
+    int i;
+    for(i=0; i<num_devices; i++)
+    {
+        ip_address_list[i] = strdup(p);
+        p = strtok(NULL, &delimeter);
+    }
+
+    devices = (device_t*) malloc(sizeof(device_t) * num_devices);
+   
+    for(i=0; i<num_devices; i++)
+    {
+        if ( ( devices[i].sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
+        {
+            error( const_cast<char *>( "ERROR opening socket") );
+        }
+        if ( ( devices[i].server = gethostbyname( ip_address_list[i] ) ) == NULL )
+        {
+            error( const_cast<char *>("ERROR, no such host\n") );
+        }
+
+        bzero( (char *) &devices[i].serv_addr, sizeof(devices[i].serv_addr));
+        devices[i].serv_addr.sin_family = AF_INET;
+        bcopy( (char *)devices[i].server->h_addr, (char *)&devices[i].serv_addr.sin_addr.s_addr, devices[i].server->h_length);
+        devices[i].serv_addr.sin_port = htons(PORTNO);
+
+        if ( connect(devices[i].sockfd,(struct sockaddr *)&devices[i].serv_addr,sizeof(devices[i].serv_addr)) < 0)
+        {
+            error( const_cast<char *>( "ERROR connecting") );
+        }
+    }
 }
 
 int main(int argc, char *argv[])
 {
-    int sockfd, portno = 51200, n;
-    char serverIp[] = "10.0.0.80";
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    char buffer[256];
-    int data;
+    char ip_addresses[] = ";192.168.0.100;192.168.0.102";
+    char delimeter = ';';
+    setup(ip_addresses, delimeter, 2);
 
-    if (argc < 3) {
-      // error( const_cast<char *>( "usage myClient2 hostname port\n" ) );
-      printf( "contacting %s on port %d\n", serverIp, portno );
-      // exit(0);
+    int* buffer = (int*) malloc(sizeof(int) * 100);
+    int i;
+    for(i=1; i<100; i++)
+    {
+        buffer[i] = i;
     }
-    if ( ( sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
-        error( const_cast<char *>( "ERROR opening socket") );
 
-    if ( ( server = gethostbyname( serverIp ) ) == NULL )
-        error( const_cast<char *>("ERROR, no such host\n") );
-   
-    bzero( (char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy( (char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-    serv_addr.sin_port = htons(portno);
-    if ( connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
-        error( const_cast<char *>( "ERROR connecting") );
+    send_data(buffer, sizeof(int) * 100);
 
-    for ( n = 0; n < 10; n++ ) {
-      sendData( sockfd, n );
-      data = getData( sockfd );
-      printf("%d ->  %d\n",n, data );
+    while(1);
+
+    for(i=0; i<num_devices; i++)
+    {
+        close( devices[i].sockfd );
     }
-    sendData( sockfd, -2 );
-
-    close( sockfd );
     return 0;
 }
