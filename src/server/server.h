@@ -44,5 +44,5 @@ server_status_code_t set_song(char* filepath);
 // if devices are included from the argument list then leave the connectins open
 server_status_code_t set_devices(char* ip_addresses, char delimeter, int num);
 
-server_status_code_t send_data(void* buffer, unsigned int size);
+server_status_code_t play();
 

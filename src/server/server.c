@@ -5,6 +5,7 @@
 static void *run(void*);
 static bool has_devices();
 static bool has_packets();
+static void send_data(void* buffer, unsigned int size);
 
 static pthread_t main_loop;
 static device_t* devices;
@@ -33,21 +34,8 @@ server_status_code_t set_song(char* filepath)
     return SUCCESS;
 }
 
-server_status_code_t send_data(void* buffer, unsigned int size) 
+server_status_code_t play()
 {
-    int i;
-    for(i=0; i<num_devices; i++)
-    {
-        int status = write( devices[i].sockfd, buffer, size);
-        if (status < 0)
-        {
-            error( const_cast<char *>( "ERROR writing to socket") );
-        }
-        else
-        {
-            printf("Great Success!\n");
-        }
-    }
     return SUCCESS;
 }
 
@@ -93,6 +81,23 @@ server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
     return SUCCESS;
 }
 
+static void send_data(void* buffer, unsigned int size) 
+{
+    int i;
+    for(i=0; i<num_devices; i++)
+    {
+        int status = write( devices[i].sockfd, buffer, size);
+        if (status < 0)
+        {
+            error( const_cast<char *>( "ERROR writing to socket") );
+        }
+        else
+        {
+            printf("Great Success!\n");
+        }
+    }
+}
+
 static bool has_devices()
 {
 	return true;
@@ -119,9 +124,9 @@ static void *run(void* user_data)
 
 int main()
 {
-	start();
+    start();
 
-	char ip_addresses[] = ";192.168.0.100;192.168.0.102";
+    char ip_addresses[] = ";192.168.0.100;192.168.0.102";
     char delimeter = ';';
     set_devices(ip_addresses, delimeter, 1);
 

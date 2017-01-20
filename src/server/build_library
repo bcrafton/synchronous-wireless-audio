@@ -1,1 +1,1 @@
-gcc -shared -Wl,-soname,server -o server.so -fPIC server.c
+g++ -shared -Wl,-soname,server -o server.so -fPIC server.c -pthread
