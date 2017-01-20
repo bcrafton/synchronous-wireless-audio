@@ -1,0 +1,20 @@
+To play sound using SDL on the raspberry pi, follow these instructions:
+
+Update the advanced package manager by running:
+
+sudo apt-get update
+
+Next, pull down and install the SDL2 library by running:
+
+sudo apt-get install libsdl2-dev
+
+Now, compile the example playwav.c file and link the SDL library:
+
+gcc playwav.c -I/usr/include/SDL2 -lSDL2
+
+Lastly, run the program:
+
+./a.out
+
+
+**NOTE: Keep in mind, in order to confirm sound output from the pi while the program is running, you will need to connect headphones/speakers to the pi.
