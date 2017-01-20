@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
-#define PORTNO 51201
+#define PORTNO 51200
 
 typedef enum server_status_code{
     SUCCESS = 0,
