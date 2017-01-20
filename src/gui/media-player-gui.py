@@ -16,6 +16,7 @@ import Tkinter
 from Tkinter import *
 from ttk import *
 from pprint import pprint
+import ctypes
 
 
 class Example(Frame):
@@ -25,12 +26,15 @@ class Example(Frame):
         self.parent = parent
         self.init_ui()
 
+        self.server = ctypes.CDLL('../server/server.so')
+        status = self.server.start()
+
     def init_ui(self):
         self.parent.title("Media Player")
         self.style = Style()
         self.style.theme_use("default")
 
-        ips = get_ips()
+        ips = self.get_ips()
 
         selections_frame = Frame(self, height=20)
         selections_frame.pack(fill=X)
@@ -66,44 +70,49 @@ class Example(Frame):
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
 
-        update_ips_button = Button(self, text="Update IPs", command=lambda: update_ips(ip_list, check_vars))
+        update_ips_button = Button(self, text="Update IPs", command=lambda: self.update_ips(ip_list, check_vars))
         update_ips_button.pack(side=RIGHT, padx=5, pady=5)
 
-        stop_button = Button(self, text="Stop", command=stop())
+        stop_button = Button(self, text="Stop", command=lambda: self.stop())
         stop_button.pack(side=RIGHT, padx=5, pady=5)
 
-        play_button = Button(self, text="Play", command=lambda: play(song_location.get))
+        play_button = Button(self, text="Play", command=lambda: self.play(song_location.get))
         play_button.pack(side=RIGHT, padx=5, pady=5)
 
+    def play(self, song_path):
+        self.server.play()
+
+    def stop(self):
+        self.server.stop()
+
+    def get_ips(self):
+        """ Get the ip addresses then return them as a list """
+        ips = ["1", "2", "3"]
+        return ips
+
+    def update_ips(self, ip_list, check_vars):
+        """ Update the ips we're playing to """
+        ips = []
+
+        for i in range(0, len(check_vars)):
+            if check_vars[i].get():
+                ips.append(ip_list[i])
+
+        # replace this with whatever you come up with, but it should look like this
+        # also make sure to cast the string like:
+        #   ctypes.c_char_p(ip_string)
+        # and the delimeter like:
+        #   ctypes.c_char(';')
+
+        ip_string = "192.168.0.100;192.168.0.102"
+        status = self.server.set_devices(ctypes.c_char_p(ip_string), ctypes.c_char(';'), 1)
+        print status
 
 def main():
     root = Tk()
     root.geometry("500x170+300+300")
     app = Example(root)
     root.mainloop()
-
-
-def play(song_path):
-    """ Send the location to C++ code """
-
-
-def stop():
-    """ Send stop command """
-
-
-def get_ips():
-    """ Get the ip addresses then return them as a list """
-    ips = ["1", "2", "3"]
-    return ips
-
-
-def update_ips(ip_list, check_vars):
-    """ Update the ips we're playing to """
-    ips = []
-
-    for i in range(0, len(check_vars)):
-        if check_vars[i].get():
-            ips.append(ip_list[i])
 
 if __name__ == '__main__':
     main()

@@ -11,6 +11,8 @@ static pthread_t main_loop;
 static device_t* devices;
 static int num_devices;
 
+static bool go = true;
+
 void error(char *msg) {
     perror(msg);
     exit(0);
@@ -25,7 +27,13 @@ server_status_code_t start()
 		exit(EXIT_FAILURE);
 	}
 	// we do not want to wait for the thread to finish
-	pthread_join(main_loop, NULL);
+	//pthread_join(main_loop, NULL);
+    return SUCCESS;
+}
+
+server_status_code_t stop()
+{
+    go = false;
     return SUCCESS;
 }
 
@@ -36,11 +44,14 @@ server_status_code_t set_song(char* filepath)
 
 server_status_code_t play()
 {
+    go = true;
     return SUCCESS;
 }
 
 server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
 {
+    //printf("%s, %c, %d\n", ip_addresses, delimeter, num);
+    //return SUCCESS;
     num_devices = num;
 
     char** ip_address_list = (char**) malloc(sizeof(char*) * num_devices);
@@ -60,11 +71,11 @@ server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
     {
         if ( ( devices[i].sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
         {
-            error( const_cast<char *>( "ERROR opening socket") );
+            perror("Error opening socket\n");
         }
         if ( ( devices[i].server = gethostbyname( ip_address_list[i] ) ) == NULL )
         {
-            error( const_cast<char *>("ERROR, no such host\n") );
+            perror("Error, no such host\n");
         }
 
         bzero( (char *) &devices[i].serv_addr, sizeof(devices[i].serv_addr));
@@ -74,7 +85,7 @@ server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
 
         if ( connect(devices[i].sockfd,(struct sockaddr *)&devices[i].serv_addr,sizeof(devices[i].serv_addr)) < 0)
         {
-            error( const_cast<char *>( "ERROR connecting") );
+            perror("Error connecting\n");
         }
     }
 
@@ -89,7 +100,7 @@ static void send_data(void* buffer, unsigned int size)
         int status = write( devices[i].sockfd, buffer, size);
         if (status < 0)
         {
-            error( const_cast<char *>( "ERROR writing to socket") );
+            perror("Error writing to socket\n");
         }
         else
         {
@@ -111,15 +122,21 @@ static bool has_packets()
 static void *run(void* user_data)
 {
 	assert(user_data == NULL);
-	printf("hit the main loop\n");
+    int i=0;
+    while(1)
+    {
+        if(go)
+        printf("%d\n", i++);
 
-	// grab the lock
-	// a lock needs to be grabbed so that setting devices and setting the song can be done 
 
-	if(has_packets() && has_devices())
-	{
-		// send the packets
-	}
+	    // grab the lock
+	    // a lock needs to be grabbed so that setting devices and setting the song can be done 
+
+	    if(has_packets() && has_devices())
+	    {
+		    // send the packets
+	    }
+    }
 }
 
 int main()

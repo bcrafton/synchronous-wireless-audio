@@ -45,4 +45,5 @@ server_status_code_t set_song(char* filepath);
 server_status_code_t set_devices(char* ip_addresses, char delimeter, int num);
 
 server_status_code_t play();
+server_status_code_t stop();
 
