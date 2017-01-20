@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 
-#define MUS_PATH "../goat.wav"
+#define MUS_PATH "../../../sound_files/goat.wav"
 
 // prototype for our audio callback
 // see the implementation for more information
@@ -20,6 +20,9 @@ int main(int argc, char* argv[]){
 	if (SDL_Init(SDL_INIT_AUDIO) < 0)
 			return 1;
 
+	// added to test
+	printf("Hello there\n");
+
 	// local variables
 	static Uint32 wav_length; // length of our sample
 	static Uint8 *wav_buffer; // buffer containing our audio file
@@ -29,7 +32,8 @@ int main(int argc, char* argv[]){
 	/* Load the WAV */
 	// the specs, length and buffer of our wav are filled
 	if( SDL_LoadWAV(MUS_PATH, &wav_spec, &wav_buffer, &wav_length) == NULL ){
-	  return 1;
+	  printf("couldn't load wav\n");
+		return 1;
 	}
 	// set the callback function
 	wav_spec.callback = my_audio_callback;
@@ -54,7 +58,7 @@ int main(int argc, char* argv[]){
 
 	// wait until we're don't playing
 	while ( audio_len > 0 ) {
-		SDL_Delay(100); 
+		SDL_Delay(5); 
 	}
 	
 	// shut everything down
@@ -73,8 +77,8 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len) {
 		return;
 	
 	len = ( len > audio_len ? audio_len : len );
-	//SDL_memcpy (stream, audio_pos, len); 					// simply copy from one buffer into the other
-	SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
+	SDL_memcpy (stream, audio_pos, len); 					// simply copy from one buffer into the other
+	//SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
 	
 	audio_pos += len;
 	audio_len -= len;
