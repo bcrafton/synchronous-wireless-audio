@@ -16,7 +16,23 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
+#include <SDL2/SDL.h>
+
 #define PORTNO 51200
+#define WAV_FRAME_SIZE 1000
+#define MUS_PATH "../../sound_files/goat.wav"
+
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef unsigned long uint64_t;
+
+/*
+typedef char int8_t;
+typedef short int16_t;
+typedef int int32_t;
+typedef long int64_t;
+*/
 
 typedef enum server_status_code{
     SUCCESS = 0,

@@ -76,14 +76,20 @@ class Example(Frame):
         stop_button = Button(self, text="Stop", command=lambda: self.stop())
         stop_button.pack(side=RIGHT, padx=5, pady=5)
 
-        play_button = Button(self, text="Play", command=lambda: self.play(song_location.get))
+        play_button = Button(self, text="Play", command=lambda: self.play())
         play_button.pack(side=RIGHT, padx=5, pady=5)
 
-    def play(self, song_path):
+        set_song_button = Button(self, text="Set Song", command=lambda: self.set_song(song_location.get()))
+        set_song_button.pack(side=RIGHT, padx=5, pady=5)
+
+    def play(self):
         self.server.play()
 
     def stop(self):
         self.server.stop()
+
+    def set_song(self, song_path):
+        self.server.set_song(ctypes.c_char_p(song_path))
 
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
@@ -107,6 +113,8 @@ class Example(Frame):
         ip_string = "192.168.0.100;192.168.0.102"
         status = self.server.set_devices(ctypes.c_char_p(ip_string), ctypes.c_char(';'), 1)
         print status
+
+    
 
 def main():
     root = Tk()

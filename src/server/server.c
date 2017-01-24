@@ -11,15 +11,23 @@ static pthread_t main_loop;
 static device_t* devices;
 static int num_devices;
 
-static bool go = true;
+static bool pause_audio = true;
 
-void error(char *msg) {
-    perror(msg);
-    exit(0);
-}
+static uint8_t* buffer;
+static uint32_t length;
+
+uint8_t* curr_pos;
+uint32_t curr_length;
+
+static SDL_AudioSpec spec;
 
 server_status_code_t start()
 {
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
+	    return 1;
+    }
+
 	int ret = pthread_create( &main_loop, NULL, run, NULL);
 	if(ret)
 	{
@@ -31,20 +39,29 @@ server_status_code_t start()
     return SUCCESS;
 }
 
-server_status_code_t stop()
+static void *run(void* user_data)
 {
-    go = false;
-    return SUCCESS;
+    while(1)
+    {
+        // grab the lock
+        // a lock needs to be grabbed so that setting devices and setting the song can be done 
+        if(has_packets() && has_devices() && !pause_audio)
+        {
+            send_data(curr_pos, WAV_FRAME_SIZE);
+            curr_length -= WAV_FRAME_SIZE;
+            curr_pos += WAV_FRAME_SIZE;
+        }
+    }
 }
 
 server_status_code_t set_song(char* filepath)
 {
-    return SUCCESS;
-}
-
-server_status_code_t play()
-{
-    go = true;
+    if( SDL_LoadWAV(filepath, &spec, &buffer, &length) == NULL ){
+        printf("couldn't load wav\n");
+        return 1;
+    }
+    curr_pos = buffer;
+    curr_length = length;
     return SUCCESS;
 }
 
@@ -92,6 +109,18 @@ server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
     return SUCCESS;
 }
 
+server_status_code_t stop()
+{
+    pause_audio = true;
+    return SUCCESS;
+}
+
+server_status_code_t play()
+{
+    pause_audio = false;
+    return SUCCESS;
+}
+
 static void send_data(void* buffer, unsigned int size) 
 {
     int i;
@@ -111,53 +140,47 @@ static void send_data(void* buffer, unsigned int size)
 
 static bool has_devices()
 {
-	return true;
+	return devices != NULL;
 }
 
 static bool has_packets()
 {
-	return true;
-}
-
-static void *run(void* user_data)
-{
-	assert(user_data == NULL);
-    int i=0;
-    while(1)
-    {
-        if(go)
-        printf("%d\n", i++);
-
-
-	    // grab the lock
-	    // a lock needs to be grabbed so that setting devices and setting the song can be done 
-
-	    if(has_packets() && has_devices())
-	    {
-		    // send the packets
-	    }
-    }
+	return curr_length > 0;
 }
 
 int main()
 {
-    start();
+    // start();
 
     char ip_addresses[] = ";192.168.0.100;192.168.0.102";
     char delimeter = ';';
     set_devices(ip_addresses, delimeter, 1);
 
-    int* buffer = (int*) malloc(sizeof(int) * 100);
-    int i;
-    for(i=1; i<100; i++)
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
     {
-        buffer[i] = i;
+	    return 1;
     }
 
-    send_data(buffer, sizeof(int) * 100);
+    uint8_t* buffer;
+    uint32_t length;
+    SDL_AudioSpec spec;
 
-    //while(1);
+	if( SDL_LoadWAV(MUS_PATH, &spec, &buffer, &length) == NULL ){
+	  printf("couldn't load wav\n");
+		return 1;
+	}
 
+    uint8_t* curr_pos = buffer;
+    uint32_t curr_length = length;
+    
+    while(curr_length > 0)
+    {
+        send_data(curr_pos, WAV_FRAME_SIZE);
+        curr_length -= WAV_FRAME_SIZE;
+        curr_pos += WAV_FRAME_SIZE;
+    }
+
+    int i;
     for(i=0; i<num_devices; i++)
     {
         close( devices[i].sockfd );
