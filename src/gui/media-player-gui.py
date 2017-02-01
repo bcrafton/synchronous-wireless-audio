@@ -12,6 +12,7 @@ Author: Jan Bodnar
 Last modified: November 2015
 Website: www.zetcode.com
 """
+import socket
 import Tkinter
 from Tkinter import *
 from ttk import *
@@ -23,14 +24,14 @@ class Example(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
 
-        self.parent = parent
+        self.parent = parent   #save ref to parent widget
         self.init_ui()
 
-        self.server = ctypes.CDLL('../server/server.so')
-        status = self.server.start()
+        #self.server = ctypes.CDLL('../server/server.so')
+        #status = self.server.start()
 
     def init_ui(self):
-        self.parent.title("Media Player")
+        self.parent.title("Media Player")     #create UI
         self.style = Style()
         self.style.theme_use("default")
 
@@ -117,10 +118,14 @@ class Example(Frame):
     
 
 def main():
-    root = Tk()
-    root.geometry("500x170+300+300")
-    app = Example(root)
+    root = Tk()  #root window created -> main application
+    root.geometry("500x170+300+300") #widthxheight, xy coordinates
+    app = Example(root) #create instnace of application class
+    
+   # print(socket.gethostbyname(socket.gethostname()))
+
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()
