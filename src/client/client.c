@@ -58,6 +58,22 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+/*
+// rename me please
+int handler()
+{
+    assert(sizeof(packet_header_t == 8));
+    packet_header_t header;
+    read_socket(fd, &header, sizeof(packet_header_t));
+    switch (header->code)
+    {
+        case AUDIO_DATA:
+        break;
+        case CONTROL:
+        break;
+    }
+}
+*/
 
 int read_socket(int socketfd, void* buffer, int size)
 {

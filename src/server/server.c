@@ -47,9 +47,9 @@ static void *run(void* user_data)
         // a lock needs to be grabbed so that setting devices and setting the song can be done 
         if(has_packets() && has_devices() && !pause_audio)
         {
-            send_data(curr_pos, WAV_FRAME_SIZE);
-            curr_length -= WAV_FRAME_SIZE;
-            curr_pos += WAV_FRAME_SIZE;
+            send_data(curr_pos, SIZE_OF_FRAME);
+            curr_length -= SIZE_OF_FRAME;
+            curr_pos += SIZE_OF_FRAME;
         }
     }
 }
@@ -175,9 +175,9 @@ int main()
     
     while(curr_length > 0)
     {
-        send_data(curr_pos, WAV_FRAME_SIZE);
-        curr_length -= WAV_FRAME_SIZE;
-        curr_pos += WAV_FRAME_SIZE;
+        send_data(curr_pos, SIZE_OF_FRAME);
+        curr_length -= SIZE_OF_FRAME;
+        curr_pos += SIZE_OF_FRAME;
     }
 
     int i;

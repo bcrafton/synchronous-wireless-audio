@@ -1,42 +1,16 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <assert.h>
-#include <stdbool.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <netdb.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <arpa/inet.h>
+#include "../common/common.h"
 
-#include <SDL2/SDL.h>
-
-#define PORTNO 51200
-#define WAV_FRAME_SIZE 1000
 #define MUS_PATH "../../sound_files/goat.wav"
-
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long uint64_t;
-
-/*
-typedef char int8_t;
-typedef short int16_t;
-typedef int int32_t;
-typedef long int64_t;
-*/
 
 typedef enum server_status_code{
     SUCCESS = 0,
-    ERROR
+    LOAD_SONG_ERROR,
+    SERVER_START_ERROR,
+    OPEN_SOCKET_ERROR,
+    CANNOT_FIND_RPI_ERROR,
+    CONNECTION_ERROR,
 }server_status_code_t;
 
 typedef struct sockaddr_in sockaddr_in;
