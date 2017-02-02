@@ -8,6 +8,11 @@ static bool has_packets();
 static void send_data(void* buffer, unsigned int size);
 
 static pthread_t main_loop;
+
+// this needs to be turned into a list unfortunately.
+// I guess we cud statically allocate a 10 device buffer and just maintain the number we actually have.
+static List* device_list;
+
 static device_t* devices;
 static int num_devices;
 
@@ -23,6 +28,10 @@ static SDL_AudioSpec spec;
 
 server_status_code_t start()
 {
+    // if we started a new thread this list shud be NULL.
+    assert(device_list == NULL);
+    device_list = list_constructor();
+
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
     {
 	    return 1;
@@ -32,7 +41,7 @@ server_status_code_t start()
 	if(ret)
 	{
 		fprintf(stderr,"Error - pthread_create() return code: %d\n", ret);
-		exit(EXIT_FAILURE);
+		return SERVER_START_ERROR;
 	}
 	// we do not want to wait for the thread to finish
 	//pthread_join(main_loop, NULL);
@@ -58,13 +67,14 @@ server_status_code_t set_song(char* filepath)
 {
     if( SDL_LoadWAV(filepath, &spec, &buffer, &length) == NULL ){
         printf("couldn't load wav\n");
-        return 1;
+        return LOAD_SONG_ERROR;
     }
     curr_pos = buffer;
     curr_length = length;
     return SUCCESS;
 }
 
+// this function should be deprecated because we shud only be trying to connect to one device at a time
 server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
 {
     //printf("%s, %c, %d\n", ip_addresses, delimeter, num);
@@ -89,10 +99,21 @@ server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
         if ( ( devices[i].sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
         {
             perror("Error opening socket\n");
+            return OPEN_SOCKET_ERROR;
         }
+        printf("made it here\n");
+        // so it looks like we break here.
+        // need to add a timeout, or else this thing endlessly tries to get the host.
+        // gethostbyname is also apparently deprecated which is annoying.
+        // it will need to be done this way: http://man7.org/linux/man-pages/man3/getaddrinfo_a.3.html
+        // apparently it cannot simply have a nice 5 second timeout, which wud work great for us...
+        // thread: http://stackoverflow.com/questions/24403435/socket-hostname-lookup-timeout-how-to-implement-it
+        // this will be decent amount of work consdiering there are threads involved...
+        // perhaps there is a different route we can go, going to look at something else for now and come back 
         if ( ( devices[i].server = gethostbyname( ip_address_list[i] ) ) == NULL )
         {
             perror("Error, no such host\n");
+            return CANNOT_FIND_RPI_ERROR;
         }
 
         bzero( (char *) &devices[i].serv_addr, sizeof(devices[i].serv_addr));
@@ -100,12 +121,53 @@ server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
         bcopy( (char *)devices[i].server->h_addr, (char *)&devices[i].serv_addr.sin_addr.s_addr, devices[i].server->h_length);
         devices[i].serv_addr.sin_port = htons(PORTNO);
 
+        // this works fine, its the previous code that is casuing the HARD error.
         if ( connect(devices[i].sockfd,(struct sockaddr *)&devices[i].serv_addr,sizeof(devices[i].serv_addr)) < 0)
         {
             perror("Error connecting\n");
+            return CONNECTION_ERROR;
         }
     }
 
+    return SUCCESS;
+}
+
+server_status_code_t set_device(char* ip_address)
+{
+    device_t* device = (device_t*) malloc(sizeof(device_t));
+
+    if ( ( device->sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
+    {
+        perror("Error opening socket\n");
+        return OPEN_SOCKET_ERROR;
+    }
+    printf("made it here\n");
+    // so it looks like we break here.
+    // need to add a timeout, or else this thing endlessly tries to get the host.
+    // gethostbyname is also apparently deprecated which is annoying.
+    // it will need to be done this way: http://man7.org/linux/man-pages/man3/getaddrinfo_a.3.html
+    // apparently it cannot simply have a nice 5 second timeout, which wud work great for us...
+    // thread: http://stackoverflow.com/questions/24403435/socket-hostname-lookup-timeout-how-to-implement-it
+    // this will be decent amount of work consdiering there are threads involved...
+    // perhaps there is a different route we can go, going to look at something else for now and come back 
+    if ( ( device->server = gethostbyname( ip_address ) ) == NULL )
+    {
+        perror("Error, no such host\n");
+        return CANNOT_FIND_RPI_ERROR;
+    }
+
+    bzero( (char *) &device->serv_addr, sizeof(device->serv_addr));
+    device->serv_addr.sin_family = AF_INET;
+    bcopy( (char *)device->server->h_addr, (char *)&device->serv_addr.sin_addr.s_addr, devices->server->h_length);
+    device->serv_addr.sin_port = htons(PORTNO);
+
+    // this works fine, its the previous code that is casuing the HARD error.
+    if ( connect(device->sockfd,(struct sockaddr *)&device->serv_addr,sizeof(device->serv_addr)) < 0)
+    {
+        perror("Error connecting\n");
+        return CONNECTION_ERROR;
+    }
+    list_append(device, device_list);
     return SUCCESS;
 }
 

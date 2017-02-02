@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 
 #include <SDL2/SDL.h>
+#include "list.h"
 
 #define PORTNO 51200
 #define WAV_FRAME_SIZE 1000
