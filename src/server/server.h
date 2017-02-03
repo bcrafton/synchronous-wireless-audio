@@ -21,7 +21,7 @@
 #include <SDL2/SDL.h>
 #include "list.h"
 
-#define PORTNO 51202
+#define PORTNO 51200
 #define WAV_FRAME_SIZE 1000
 #define MUS_PATH "../../sound_files/goat.wav"
 
