@@ -28,6 +28,7 @@ class Example(Frame):
 
         self.server = ctypes.CDLL('../server/server.so')
         status = self.server.start()
+        print "server start status: " + str(status)
 
     def init_ui(self):
         self.parent.title("Media Player")
@@ -58,6 +59,7 @@ class Example(Frame):
 
         ip_list = []
         check_vars = []
+        ip_address = ""
 
         for ip in ips:
             var = Tkinter.BooleanVar()
@@ -70,7 +72,7 @@ class Example(Frame):
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
 
-        update_ips_button = Button(self, text="Update IPs", command=lambda: self.update_ips(ip_list, check_vars))
+        update_ips_button = Button(self, text="Update IPs", command=lambda: self.add_device(ip_address))
         update_ips_button.pack(side=RIGHT, padx=5, pady=5)
 
         stop_button = Button(self, text="Stop", command=lambda: self.stop())
@@ -89,30 +91,18 @@ class Example(Frame):
         self.server.stop()
 
     def set_song(self, song_path):
-        self.server.set_song(ctypes.c_char_p(song_path))
+        status = self.server.set_song(ctypes.c_char_p(song_path))
+        print "set song status: " + str(status)
 
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
         ips = ["1", "2", "3"]
         return ips
 
-    def update_ips(self, ip_list, check_vars):
-        """ Update the ips we're playing to """
-        ips = []
-
-        for i in range(0, len(check_vars)):
-            if check_vars[i].get():
-                ips.append(ip_list[i])
-
-        # replace this with whatever you come up with, but it should look like this
-        # also make sure to cast the string like:
-        #   ctypes.c_char_p(ip_string)
-        # and the delimeter like:
-        #   ctypes.c_char(';')
-
-        ip_string = "192.168.0.100;192.168.0.102"
-        status = self.server.set_devices(ctypes.c_char_p(ip_string), ctypes.c_char(';'), 1)
-        print status
+    def add_device(self, ip_address):
+        ip_address = "192.168.0.100"
+        status = self.server.set_device(ctypes.c_char_p(ip_address))
+        print "set device status: " + str(status)
 
     
 

@@ -13,6 +13,8 @@ static pthread_t main_loop;
 // I guess we cud statically allocate a 10 device buffer and just maintain the number we actually have.
 static List* device_list;
 
+static device_t* device;
+
 static device_t* devices;
 static int num_devices;
 
@@ -53,7 +55,8 @@ static void *run(void* user_data)
     while(1)
     {
         // grab the lock
-        // a lock needs to be grabbed so that setting devices and setting the song can be done 
+        // a lock needs to be grabbed so that setting devices and setting the song can be done
+        //printf("%d %d %d", has_packets(), has_devices(), !pause_audio);
         if(has_packets() && has_devices() && !pause_audio)
         {
             send_data(curr_pos, WAV_FRAME_SIZE);
@@ -74,99 +77,65 @@ server_status_code_t set_song(char* filepath)
     return SUCCESS;
 }
 
-// this function should be deprecated because we shud only be trying to connect to one device at a time
-server_status_code_t set_devices(char* ip_addresses, char delimeter, int num)
-{
-    //printf("%s, %c, %d\n", ip_addresses, delimeter, num);
-    //return SUCCESS;
-    num_devices = num;
-
-    char** ip_address_list = (char**) malloc(sizeof(char*) * num_devices);
-
-    char* p = strtok(ip_addresses, &delimeter);
-    
-    int i;
-    for(i=0; i<num_devices; i++)
-    {
-        ip_address_list[i] = strdup(p);
-        p = strtok(NULL, &delimeter);
-    }
-
-    devices = (device_t*) malloc(sizeof(device_t) * num_devices);
-   
-    for(i=0; i<num_devices; i++)
-    {
-        if ( ( devices[i].sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
-        {
-            perror("Error opening socket\n");
-            return OPEN_SOCKET_ERROR;
-        }
-        printf("made it here\n");
-        // so it looks like we break here.
-        // need to add a timeout, or else this thing endlessly tries to get the host.
-        // gethostbyname is also apparently deprecated which is annoying.
-        // it will need to be done this way: http://man7.org/linux/man-pages/man3/getaddrinfo_a.3.html
-        // apparently it cannot simply have a nice 5 second timeout, which wud work great for us...
-        // thread: http://stackoverflow.com/questions/24403435/socket-hostname-lookup-timeout-how-to-implement-it
-        // this will be decent amount of work consdiering there are threads involved...
-        // perhaps there is a different route we can go, going to look at something else for now and come back 
-        if ( ( devices[i].server = gethostbyname( ip_address_list[i] ) ) == NULL )
-        {
-            perror("Error, no such host\n");
-            return CANNOT_FIND_RPI_ERROR;
-        }
-
-        bzero( (char *) &devices[i].serv_addr, sizeof(devices[i].serv_addr));
-        devices[i].serv_addr.sin_family = AF_INET;
-        bcopy( (char *)devices[i].server->h_addr, (char *)&devices[i].serv_addr.sin_addr.s_addr, devices[i].server->h_length);
-        devices[i].serv_addr.sin_port = htons(PORTNO);
-
-        // this works fine, its the previous code that is casuing the HARD error.
-        if ( connect(devices[i].sockfd,(struct sockaddr *)&devices[i].serv_addr,sizeof(devices[i].serv_addr)) < 0)
-        {
-            perror("Error connecting\n");
-            return CONNECTION_ERROR;
-        }
-    }
-
-    return SUCCESS;
-}
-
 server_status_code_t set_device(char* ip_address)
 {
     device_t* device = (device_t*) malloc(sizeof(device_t));
+    //device = (device_t*) malloc(sizeof(device_t));
+    device->sockfd = socket(AF_INET, SOCK_STREAM, 0); 
 
-    if ( ( device->sockfd = socket(AF_INET, SOCK_STREAM, 0) ) < 0 )
-    {
-        perror("Error opening socket\n");
-        return OPEN_SOCKET_ERROR;
-    }
-    printf("made it here\n");
-    // so it looks like we break here.
-    // need to add a timeout, or else this thing endlessly tries to get the host.
-    // gethostbyname is also apparently deprecated which is annoying.
-    // it will need to be done this way: http://man7.org/linux/man-pages/man3/getaddrinfo_a.3.html
-    // apparently it cannot simply have a nice 5 second timeout, which wud work great for us...
-    // thread: http://stackoverflow.com/questions/24403435/socket-hostname-lookup-timeout-how-to-implement-it
-    // this will be decent amount of work consdiering there are threads involved...
-    // perhaps there is a different route we can go, going to look at something else for now and come back 
-    if ( ( device->server = gethostbyname( ip_address ) ) == NULL )
-    {
-        perror("Error, no such host\n");
-        return CANNOT_FIND_RPI_ERROR;
-    }
+    int ret;
+    int options;
+    long flags; 
+    fd_set myset; 
+    struct timeval tv; 
+    socklen_t len; 
 
-    bzero( (char *) &device->serv_addr, sizeof(device->serv_addr));
-    device->serv_addr.sin_family = AF_INET;
-    bcopy( (char *)device->server->h_addr, (char *)&device->serv_addr.sin_addr.s_addr, devices->server->h_length);
-    device->serv_addr.sin_port = htons(PORTNO);
+    // Set non-blocking 
+    flags = fcntl(device->sockfd, F_GETFL, NULL); 
+    flags |= O_NONBLOCK; 
+    fcntl(device->sockfd, F_SETFL, flags); 
 
-    // this works fine, its the previous code that is casuing the HARD error.
-    if ( connect(device->sockfd,(struct sockaddr *)&device->serv_addr,sizeof(device->serv_addr)) < 0)
-    {
-        perror("Error connecting\n");
-        return CONNECTION_ERROR;
-    }
+    // Trying to connect with timeout 
+    device->serv_addr.sin_family = AF_INET; 
+    device->serv_addr.sin_port = htons(PORTNO); 
+    device->serv_addr.sin_addr.s_addr = inet_addr(ip_address); 
+    ret = connect(device->sockfd, (struct sockaddr *)&device->serv_addr, sizeof(device->serv_addr)); 
+
+    if (ret < 0) 
+    { 
+        if (errno == EINPROGRESS) 
+        { 
+            tv.tv_sec = 10; 
+            tv.tv_usec = 0; 
+            FD_ZERO(&myset); 
+            FD_SET(device->sockfd, &myset); 
+            
+            if (select(device->sockfd+1, NULL, &myset, NULL, &tv) > 0) 
+            { 
+                len = sizeof(int); 
+                getsockopt(device->sockfd, SOL_SOCKET, SO_ERROR, (void*)(&options), &len); 
+                if (options) 
+                { 
+                    fprintf(stderr, "Error in connection() %d - %s\n", options, strerror(options)); 
+                    return CONNECTION_ERROR;
+                } 
+            } 
+            else 
+            { 
+                fprintf(stderr, "Timeout or error() %d - %s\n", options, strerror(options)); 
+                return TIMEOUT_ERROR;
+            } 
+        } 
+        else 
+        { 
+            fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno)); 
+            return CONNECTION_ERROR;
+        } 
+    } 
+    flags = fcntl(device->sockfd, F_GETFL, NULL); 
+    flags &= (~O_NONBLOCK); 
+    fcntl(device->sockfd, F_SETFL, flags);
+    
     list_append(device, device_list);
     return SUCCESS;
 }
@@ -186,9 +155,10 @@ server_status_code_t play()
 static void send_data(void* buffer, unsigned int size) 
 {
     int i;
-    for(i=0; i<num_devices; i++)
+    for(i=0; i<device_list->size; i++)
     {
-        int status = write( devices[i].sockfd, buffer, size);
+        device_t* next = list_get(i, device_list);
+        int status = write( next->sockfd, buffer, size);
         if (status < 0)
         {
             perror("Error writing to socket\n");
@@ -202,7 +172,7 @@ static void send_data(void* buffer, unsigned int size)
 
 static bool has_devices()
 {
-	return devices != NULL;
+	return device_list->size != 0;
 }
 
 static bool has_packets()
@@ -212,40 +182,27 @@ static bool has_packets()
 
 int main()
 {
-    // start();
+    char ip_address[] = "192.168.0.100";
+    set_device(ip_address);
+    close(device->sockfd);
 
-    char ip_addresses[] = ";192.168.0.100;192.168.0.102";
-    char delimeter = ';';
-    set_devices(ip_addresses, delimeter, 1);
-
-    if (SDL_Init(SDL_INIT_AUDIO) < 0)
-    {
-	    return 1;
-    }
-
-    uint8_t* buffer;
-    uint32_t length;
-    SDL_AudioSpec spec;
-
-	if( SDL_LoadWAV(MUS_PATH, &spec, &buffer, &length) == NULL ){
-	  printf("couldn't load wav\n");
-		return 1;
-	}
-
-    uint8_t* curr_pos = buffer;
-    uint32_t curr_length = length;
-    
-    while(curr_length > 0)
-    {
-        send_data(curr_pos, WAV_FRAME_SIZE);
-        curr_length -= WAV_FRAME_SIZE;
-        curr_pos += WAV_FRAME_SIZE;
-    }
-
-    int i;
-    for(i=0; i<num_devices; i++)
-    {
-        close( devices[i].sockfd );
-    }
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

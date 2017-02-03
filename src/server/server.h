@@ -16,10 +16,12 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
+#include <fcntl.h>
+
 #include <SDL2/SDL.h>
 #include "list.h"
 
-#define PORTNO 51200
+#define PORTNO 51202
 #define WAV_FRAME_SIZE 1000
 #define MUS_PATH "../../sound_files/goat.wav"
 
@@ -37,7 +39,12 @@ typedef long int64_t;
 
 typedef enum server_status_code{
     SUCCESS = 0,
-    ERROR
+    LOAD_SONG_ERROR,
+    SERVER_START_ERROR,
+    OPEN_SOCKET_ERROR,
+    CANNOT_FIND_RPI_ERROR,
+    CONNECTION_ERROR,
+    TIMEOUT_ERROR,
 }server_status_code_t;
 
 typedef struct sockaddr_in sockaddr_in;
@@ -45,7 +52,6 @@ typedef struct hostent     hostent;
 
 typedef struct device{
     int sockfd;
-    hostent *server;
     sockaddr_in serv_addr;
 } device_t;
 
@@ -56,10 +62,7 @@ server_status_code_t start();
 // this will set change the song to be played.
 server_status_code_t set_song(char* filepath);
 
-// this will change the set of devices.
-// if devices are not included from the argument list then kill the tcp connections
-// if devices are included from the argument list then leave the connectins open
-server_status_code_t set_devices(char* ip_addresses, char delimeter, int num);
+server_status_code_t set_device(char* ip_addresses);
 
 server_status_code_t play();
 server_status_code_t stop();
