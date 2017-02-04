@@ -59,9 +59,9 @@ static void *run(void* user_data)
         //printf("%d %d %d", has_packets(), has_devices(), !pause_audio);
         if(has_packets() && has_devices() && !pause_audio)
         {
-            send_data(curr_pos, WAV_FRAME_SIZE);
-            curr_length -= WAV_FRAME_SIZE;
-            curr_pos += WAV_FRAME_SIZE;
+            send_data(curr_pos, FRAME_SIZE);
+            curr_length -= FRAME_SIZE;
+            curr_pos += FRAME_SIZE;
         }
     }
 }
