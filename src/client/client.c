@@ -42,16 +42,16 @@ int main(int argc, char *argv[]) {
     int i;
     for(i=0; i<1000; i++)
     {
-        read_socket(current_socket_fd, load_pos, sizeof(uint8_t) * SIZE_OF_FRAME);
-        load_pos += SIZE_OF_FRAME;
+        read_socket(current_socket_fd, load_pos, sizeof(uint8_t) * FRAME_SIZE);
+        load_pos += FRAME_SIZE;
     }
 
     SDL_PauseAudio(0);
 
     while ( 1 ) 
     {
-        read_socket(current_socket_fd, buffer, sizeof(int) * SIZE_OF_FRAME);
-        load_pos += SIZE_OF_FRAME;
+        read_socket(current_socket_fd, buffer, sizeof(int) * FRAME_SIZE);
+        load_pos += FRAME_SIZE;
 
         //printf("Great Success!\n");
     }

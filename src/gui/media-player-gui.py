@@ -25,9 +25,9 @@ class Example(Frame):
 
         self.parent = parent
         self.init_ui()
-
         # self.server = ctypes.CDLL('../server/server.so')
         # status = self.server.start()
+        # print "server start status: " + str(status)
 
     def init_ui(self):
         self.parent.title("Media Player")
@@ -62,6 +62,7 @@ class Example(Frame):
 
         ip_list = []
         check_vars = []
+        ip_address = ""
 
         for ip in ips:
             var = Tkinter.BooleanVar()
@@ -74,7 +75,7 @@ class Example(Frame):
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
 
-        update_ips_button = Button(self, text="Update IPs", command=lambda: self.update_ips(ip_list, check_vars))
+        update_ips_button = Button(self, text="Update IPs", command=lambda: self.add_device(ip_address))
         update_ips_button.pack(side=RIGHT, padx=5, pady=5)
 
         stop_button = Button(self, text="Stop", command=lambda: self.stop())
@@ -93,7 +94,8 @@ class Example(Frame):
         self.server.stop()
 
     def set_song(self, song_path):
-        self.server.set_song(ctypes.c_char_p(song_path))
+        status = self.server.set_song(ctypes.c_char_p(song_path))
+        print "set song status: " + str(status)
 
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
@@ -122,6 +124,13 @@ class Example(Frame):
         location = tkFileDialog.askopenfilename()
         song_var.set(location)
 
+    def add_device(self, ip_address):
+        ip_address = "192.168.0.100"
+        status = self.server.set_device(ctypes.c_char_p(ip_address))
+        print "set device status: " + str(status)
+        ip_address = "192.168.0.102"
+        status = self.server.set_device(ctypes.c_char_p(ip_address))
+        print "set device status: " + str(status)
 
 def main():
     root = Tk()
