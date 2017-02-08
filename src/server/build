@@ -1,0 +1,14 @@
+# this is s shell script for the server code because its more convenient than a make file right now
+
+# you should have everything you need to run this, and git SHOULD have copied this as an executable, otheriwse you will have to run:
+# chmod +x build
+
+# then you need to install SDL if you dont already have it
+# see Kevin's documentation -> /doc/sdl_setup.txt
+# sudo apt-get update
+# sudo apt-get install libsdl2-dev
+
+# then you shud be able to run make and get this working
+# please let me (Brian Crafton) know otherwise
+
+gcc -shared -Wl,-soname,server -o server.so -fPIC server.c list.c -pthread -I/usr/include/SDL2 -lSDL2

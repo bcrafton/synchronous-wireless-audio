@@ -6,12 +6,12 @@
 
 typedef enum server_status_code{
     SUCCESS = 0,
-    LOAD_SONG_ERROR,
-    SERVER_START_ERROR,
-    OPEN_SOCKET_ERROR,
-    CANNOT_FIND_RPI_ERROR,
-    CONNECTION_ERROR,
-    TIMEOUT_ERROR,
+    LOAD_SONG_ERROR = 1,
+    SERVER_START_ERROR = 2,
+    OPEN_SOCKET_ERROR = 3,
+    CANNOT_FIND_RPI_ERROR = 4,
+    CONNECTION_ERROR = 5,
+    TIMEOUT_ERROR = 6,
 }server_status_code_t;
 
 typedef struct device{

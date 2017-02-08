@@ -1,1 +1,3 @@
 This will be the directory for all the server side code
+
+Please look at build file for instructions on how to create the shared library

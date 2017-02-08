@@ -15,8 +15,8 @@ static List* device_list;
 
 static device_t* device;
 
-static device_t* devices;
-static int num_devices;
+//static device_t* devices;
+//static int num_devices;
 
 static bool pause_audio = true;
 
