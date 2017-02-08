@@ -1,20 +1,18 @@
 
 #include "client.h"
 
-// this is the main socket
+// main socket
 static int current_socket_fd;
-// this will be the buffer we keep the sound packets in
-static uint8_t* buffer;
-// this is the pointer to where we are in the buffer for receiving
-static uint8_t* load_pos;
-// we are gonna need to make a circular buffer where audio_pos chases load_pos
-static uint8_t* audio_pos;
-static uint32_t audio_len;
-
-// the spec that defines the data we are playing 
+// ring buffer to store sound packets
+static ring_buf_t* rbuf;
+// the SDL spec that defines the data we are playing 
 static SDL_AudioSpec spec;
-// callback function used by sdl to get more samples
-void callback(void *userdata, Uint8 *stream, int len);
+// the thread that will read from the tcp socket
+static pthread_t tcp_thread;
+// the mutex to keep the ring buffer thread safe
+static pthread_mutex_t rbuf_mutex;
+// buffer for reading from tcp socket
+static uint8_t* swap_buf;
 
 int main(int argc, char *argv[]) {
     wait_for_connection();
@@ -24,12 +22,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    buffer = (uint8_t*) malloc(sizeof(uint8_t) * 100*1000000);
-    load_pos = buffer;
+    // allocate the ring buffer
+    rbuf = new_ring_buf(DATA_BUFFER_SIZE, FRAME_SIZE);
 
-    audio_pos = buffer;
-    audio_len = 25*1000000;
+    // allocate the tcp swap buffer
+    swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
+    SDL_memset(&spec, 0, sizeof(spec));
+    spec.freq = 48000;
+    spec.channels = 2;
+    want.samples = 4096;
     spec.callback = callback;
     spec.userdata = NULL;
 
@@ -39,22 +41,15 @@ int main(int argc, char *argv[]) {
         exit(-1);
 	}
 
-    int i;
-    for(i=0; i<1000; i++)
+    int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
+    if (ret)
     {
-        read_socket(current_socket_fd, load_pos, sizeof(uint8_t) * FRAME_SIZE);
-        load_pos += FRAME_SIZE;
+        fprintf(stderr,"Error: pthread_create() return code: %d\n", ret);
+        // add an enumeration for this error case
+        exit(1);
     }
 
     SDL_PauseAudio(0);
-
-    while ( 1 ) 
-    {
-        read_socket(current_socket_fd, buffer, sizeof(int) * FRAME_SIZE);
-        load_pos += FRAME_SIZE;
-
-        //printf("Great Success!\n");
-    }
 
     return 0;
 }
@@ -123,18 +118,23 @@ void wait_for_connection()
 }
 
 void callback(void *userdata, Uint8 *stream, int len) {
-	
-	if (audio_len ==0)
-		return;
-	
-	len = ( len > audio_len ? audio_len : len );
-	SDL_memcpy (stream, audio_pos, len); 					// simply copy from one buffer into the other
-	//SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
-	
-	audio_pos += len;
-	audio_len -= len;
-	printf("%x %x %d %d\n", (unsigned long) load_pos, (unsigned long) audio_pos, load_pos > audio_pos, len);
+	assert(len == FRAME_SIZE);
+
+    pthread_mutex_lock(&rbuf_mutex);
+    // copy from one buffer into the other
+	SDL_memcpy(stream, read_buffer(rbuf, FRAME_SIZE), len);
+    pthread_mutex_unlock(&rbuf_mutex);
 }
 
-
-
+static void* run_tcp_thread(void *data)
+{
+    while (!isFull(rbuf))
+    {
+        // read from the tcp socket into the swap buffer
+        read_socket(current_socket_fd, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
+        // attempt to acquite lock & copy from swap buffer into ring buffer
+        pthread_mutex_lock(&rbuf_mutex);
+        write_buffer(rbuf, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
+        pthread_mutex_unlock(&rbuf_mutex);
+    }
+}
