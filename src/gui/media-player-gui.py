@@ -13,9 +13,9 @@ Last modified: November 2015
 Website: www.zetcode.com
 """
 import Tkinter
-import tkFileDialog
 from Tkinter import *
 from ttk import *
+from pprint import pprint
 import ctypes
 
 
@@ -25,9 +25,10 @@ class Example(Frame):
 
         self.parent = parent
         self.init_ui()
-        # self.server = ctypes.CDLL('../server/server.so')
-        # status = self.server.start()
-        # print "server start status: " + str(status)
+
+        self.server = ctypes.CDLL('../server/server.so')
+        status = self.server.start()
+        print "server start status: " + str(status)
 
     def init_ui(self):
         self.parent.title("Media Player")
@@ -50,12 +51,8 @@ class Example(Frame):
         song_label = Label(selections_frame, text="Song Location:", width=13)
         song_label.pack(side=LEFT, padx=5, pady=5)
 
-        song_var = Tkinter.StringVar()
-        song_location = Entry(selections_frame, width=40, textvariable=song_var)
-        song_location.pack(side=LEFT, fill=X, pady=5)
-
-        song_button = Button(selections_frame, text="...", width=3, command=lambda: self.set_file_name(song_var))
-        song_button.pack(side=RIGHT, padx=5, pady=5)
+        song_location = Entry(selections_frame)
+        song_location.pack(fill=X, padx=5, expand=True)
 
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
         ips_label.pack(side=LEFT, padx=5, pady=5)
@@ -102,28 +99,6 @@ class Example(Frame):
         ips = ["1", "2", "3"]
         return ips
 
-    def update_ips(self, ip_list, check_vars):
-        """ Update the ips we're playing to """
-        ips = []
-
-        for i in range(0, len(check_vars)):
-            if check_vars[i].get():
-                ips.append(ip_list[i])
-
-        # replace this with whatever you come up with, but it should look like this
-        # also make sure to cast the string like:
-        #   ctypes.c_char_p(ip_string)
-        # and the delimeter like:
-        #   ctypes.c_char(';')
-
-        ip_string = "192.168.0.100;192.168.0.102"
-        status = self.server.set_devices(ctypes.c_char_p(ip_string), ctypes.c_char(';'), 1)
-        print status
-
-    def set_file_name(self, song_var):
-        location = tkFileDialog.askopenfilename()
-        song_var.set(location)
-
     def add_device(self, ip_address):
         ip_address = "192.168.0.100"
         status = self.server.set_device(ctypes.c_char_p(ip_address))
@@ -131,6 +106,7 @@ class Example(Frame):
         ip_address = "192.168.0.102"
         status = self.server.set_device(ctypes.c_char_p(ip_address))
         print "set device status: " + str(status)
+    
 
 def main():
     root = Tk()
