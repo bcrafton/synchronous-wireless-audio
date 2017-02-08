@@ -104,7 +104,7 @@ class Example(Frame):
         return ips
 
     def set_file_name(self, song_var):
-        location = tkFileDialog.askopenfilename()
+        location = tkFileDialog.askopenfilename(initialdir='../../sound_files')
         song_var.set(location)
 
     def add_device(self, ip_address):
