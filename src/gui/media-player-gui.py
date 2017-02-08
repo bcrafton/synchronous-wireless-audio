@@ -13,9 +13,9 @@ Last modified: November 2015
 Website: www.zetcode.com
 """
 import Tkinter
+import tkFileDialog
 from Tkinter import *
 from ttk import *
-from pprint import pprint
 import ctypes
 
 
@@ -51,8 +51,12 @@ class Example(Frame):
         song_label = Label(selections_frame, text="Song Location:", width=13)
         song_label.pack(side=LEFT, padx=5, pady=5)
 
-        song_location = Entry(selections_frame)
-        song_location.pack(fill=X, padx=5, expand=True)
+        song_var = Tkinter.StringVar()
+        song_location = Entry(selections_frame, width=40, textvariable=song_var)
+        song_location.pack(side=LEFT, fill=X, pady=5)
+
+        song_button = Button(selections_frame, text="...", width=3, command=lambda: self.set_file_name(song_var))
+        song_button.pack(side=RIGHT, padx=5, pady=5)
 
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
         ips_label.pack(side=LEFT, padx=5, pady=5)
@@ -98,6 +102,10 @@ class Example(Frame):
         """ Get the ip addresses then return them as a list """
         ips = ["1", "2", "3"]
         return ips
+
+    def set_file_name(self, song_var):
+        location = tkFileDialog.askopenfilename()
+        song_var.set(location)
 
     def add_device(self, ip_address):
         ip_address = "192.168.0.100"
