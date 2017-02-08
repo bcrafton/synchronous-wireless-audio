@@ -1,17 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-ZetCode Tkinter tutorial
-
-In this script, we use the pack manager
-to position two buttons in the
-bottom-right corner of the window.
-
-Author: Jan Bodnar
-Last modified: November 2015
-Website: www.zetcode.com
-"""
 import Tkinter
 import tkFileDialog
 from Tkinter import *
@@ -25,9 +14,9 @@ class Example(Frame):
 
         self.parent = parent
         self.init_ui()
-        # self.server = ctypes.CDLL('../server/server.so')
-        # status = self.server.start()
-        # print "server start status: " + str(status)
+        self.server = ctypes.CDLL('../server/server.so')
+        status = self.server.start()
+        print "server start status: " + str(status)
 
     def init_ui(self):
         self.parent.title("Media Player")
@@ -126,9 +115,6 @@ class Example(Frame):
 
     def add_device(self, ip_address):
         ip_address = "192.168.0.100"
-        status = self.server.set_device(ctypes.c_char_p(ip_address))
-        print "set device status: " + str(status)
-        ip_address = "192.168.0.102"
         status = self.server.set_device(ctypes.c_char_p(ip_address))
         print "set device status: " + str(status)
 
