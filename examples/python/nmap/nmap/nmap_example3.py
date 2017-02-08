@@ -1,7 +1,7 @@
 from libnmap.process import NmapProcess
 from libnmap.parser import NmapParser, NmapParserException
 
-targets = "192.168.1.0/24"
+targets = "192.168.0.0/24"
 options = "-sP"
 
 report = None
@@ -17,5 +17,10 @@ except NmapParserException as e:
 
 for host in report.hosts:
 	if host.is_up() and 'B8:27:EB' in host.mac:
+		print host.address
+		print host.mac
+
+for host in report.hosts:
+	if host.is_up():
 		print host.address
 		print host.mac

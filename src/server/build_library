@@ -1,1 +1,0 @@
-gcc -shared -Wl,-soname,server -o server.so -fPIC server.c list.c -pthread -I/usr/include/SDL2 -lSDL2
