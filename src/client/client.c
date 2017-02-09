@@ -49,7 +49,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    SDL_PauseAudio(0);
+    // dont want to start playing until we are told to do so
+    //SDL_PauseAudio(0);
 
     while(1);
 
@@ -118,7 +119,8 @@ void wait_for_connection()
     }
 }
 
-void callback(void *userdata, Uint8 *stream, int len) {
+void callback(void *userdata, Uint8 *stream, int len)
+{
 	assert(len == FRAME_SIZE);
 
 	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
@@ -134,6 +136,41 @@ void callback(void *userdata, Uint8 *stream, int len) {
 
 static void* run_tcp_thread(void *data)
 {
+    packet_header_t packet;
+    uint8_t* audio_data = (uint8_t*) malloc(FRAME_SIZE * sizeof(uint8_t));
+    control_code_t control_code;
+
+    while(1)
+    {
+        read_socket(current_socket_fd, &packet, sizeof(packet_header_t));
+        //printf("%x %x %x\n", packet.top, packet.size, packet.code);
+        
+        assert(packet.top == PACKET_HEADER_START);
+        assert(packet.code == CONTROL || packet.code == AUDIO_DATA);
+        assert(packet.size == sizeof(control_code_t) || packet.size == FRAME_SIZE);
+        
+        if(packet.code == CONTROL)
+        {
+            read_socket(current_socket_fd, &control_code, sizeof(control_code_t));
+            if(control_code == PLAY)
+            {
+                printf("Play!");
+                SDL_PauseAudio(0);	
+            }
+            else if(control_code == PAUSE || control_code == STOP)
+            {
+                SDL_PauseAudio(1);
+            }
+        }
+        else if(packet.code == AUDIO_DATA)
+        {
+            read_socket(current_socket_fd, audio_data, FRAME_SIZE * sizeof(uint8_t));
+            while(isFull(rbuf));
+            write_buffer(rbuf, audio_data, sizeof(uint8_t) * FRAME_SIZE);
+        }
+        
+    }
+    /*
     while(1)
     {
         if(!isFull(rbuf))
@@ -146,4 +183,11 @@ static void* run_tcp_thread(void *data)
             pthread_mutex_unlock(&rbuf_mutex);
         }
     }
+    */
 }
+
+
+
+
+
+

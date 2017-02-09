@@ -1,4 +1,7 @@
 
+#ifndef SERVER_H
+#define SERVER_H
+
 #include "../common/common.h"
 #include "list.h"
 
@@ -26,8 +29,14 @@ server_status_code_t start();
 // this will set change the song to be played.
 server_status_code_t set_song(char* filepath);
 
-server_status_code_t set_device(char* ip_addresses);
+// TODO: change this to add device.
+server_status_code_t set_device(char* ip_address);
+server_status_code_t remove_device(char* ip_address);
 
+// TODO: change name of play to play_audio, or think of better names for these that dont conflict
 server_status_code_t play();
+server_status_code_t pause_audio();
+// TODO: change name of stop to stop_audio
 server_status_code_t stop();
 
+#endif

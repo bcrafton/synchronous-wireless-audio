@@ -1,3 +1,7 @@
+
+#ifndef RING_BUF_H
+#define RING_BUF_H
+
 #include "../common/common.h"
 
 // buffer size for testing
@@ -21,3 +25,5 @@ uint8_t* read_buffer(ring_buf_t* b, uint32_t size);
 
 // tests
 int test_ring_buf();
+
+#endif
