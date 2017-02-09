@@ -121,7 +121,7 @@ void wait_for_connection()
 }
 
 void callback(void *userdata, Uint8 *stream, int len) {
-    printf("callback len: %d\n", len);
+    // printf("callback len: %d\n", len);
 	assert(len == FRAME_SIZE);
     // len = ( len > FRAME_SIZE ? FRAME_SIZE : len );
     // len = 4096;
