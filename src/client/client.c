@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     spec.freq = 44100;
     spec.channels = 2;
     spec.samples = 1024;
-    spec.format = AUDIO_U16;
+    spec.format = 0x8010;
     spec.callback = callback;
     spec.userdata = NULL;
 
