@@ -73,7 +73,7 @@ server_status_code_t set_song(char* filepath)
         return LOAD_SONG_ERROR;
     }
 
-    printf("freq: %d, samples: %d, channels: %d", spec.freq, spec.samples, spec.channels);
+    printf("freq: %d, samples: %d, channels: %d\n", spec.freq, spec.samples, spec.channels);
 
     curr_pos = buffer;
     curr_length = length;

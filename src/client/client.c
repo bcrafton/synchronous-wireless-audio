@@ -29,9 +29,9 @@ int main(int argc, char *argv[]) {
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
     // SDL_memset(&spec, 0, sizeof(spec));
-    // spec.freq = 48000;
+    spec.freq = 44100;
     spec.channels = 2;
-    //spec.samples = 4096;
+    spec.samples = 4096;
     spec.callback = callback;
     spec.userdata = NULL;
 
