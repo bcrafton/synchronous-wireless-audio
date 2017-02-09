@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
 	}
     
-    printf("freq: %d, samples: %d, channels: %d\n", spec.freq, spec.samples, spec.channels);
+    printf("freq: %d, samples: %d, channels: %d, format: %x\n", spec.freq, spec.samples, spec.channels, spec.format);
 
     int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
     if (ret)
@@ -126,27 +126,29 @@ void callback(void *userdata, Uint8 *stream, int len) {
     int frames = len / FRAME_SIZE;
     int i;
 
-    uint8_t* all_data = (uint8_t*) malloc(sizeof(uint8_t) * len);
+    // uint8_t* all_data = (uint8_t*) malloc(sizeof(uint8_t) * len);
     uint8_t* data;
 
     pthread_mutex_unlock(&rbuf_mutex);
-    for (i = 0; i < frames; i++)
-    {
-	    memcpy(all_data, read_buffer(rbuf, FRAME_SIZE), sizeof(uint8_t) * FRAME_SIZE);
-        all_data += FRAME_SIZE;
-    }
+    // for (i = 0; i < frames; i++)
+    // {
+	   //  memcpy(all_data, read_buffer(rbuf, FRAME_SIZE), sizeof(uint8_t) * FRAME_SIZE);
+    //     all_data += FRAME_SIZE;
+    // }
+
+    data = read_buffer(rbuf, FRAME_SIZE);
     pthread_mutex_lock(&rbuf_mutex);
 
-    all_data -= len;
+    // all_data -= len;
     
-	// if (all_data == NULL)
-	// {
-	// 	return;
-	// }
+	if (data == NULL)
+	{
+		return;
+	}
     // copy from one buffer into the other
     SDL_memcpy(stream, all_data, len);
 
-    free(all_data);
+    // free(all_data);
 }
 
 static void* run_tcp_thread(void *data)
