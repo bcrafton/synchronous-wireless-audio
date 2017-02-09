@@ -29,9 +29,9 @@ int main(int argc, char *argv[]) {
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
     // SDL_memset(&spec, 0, sizeof(spec));
-    // spec.freq = 44100;
+    spec.freq = 44100;
     spec.channels = 2;
-    // spec.samples = 4096;
+    spec.samples = 4096;
     spec.callback = callback;
     spec.userdata = NULL;
 
@@ -124,17 +124,29 @@ void callback(void *userdata, Uint8 *stream, int len) {
     // printf("callback len: %d\n", len);
     assert(len % FRAME_SIZE == 0);
     int frames = len / FRAME_SIZE;
+    int i;
+
+    uint8_t* all_data = (uint8_t*) malloc(sizeof(uint8_t) * len);
+    uint8_t* data;
 
     pthread_mutex_unlock(&rbuf_mutex);
-	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
+    for (i = 0; i < frames; i++)
+    {
+	    memcpy(all_data, read_buffer(rbuf, FRAME_SIZE), FRAME_SIZE);
+        all_data += FRAME_SIZE;
+    }
     pthread_mutex_lock(&rbuf_mutex);
+
+    all_data -= len;
     
 	if (data == NULL)
 	{
 		return;
 	}
     // copy from one buffer into the other
-    SDL_memcpy(stream, data, len);
+    SDL_memcpy(stream, all_data, len);
+
+    free(all_data);
 }
 
 static void* run_tcp_thread(void *data)
