@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     // SDL_memset(&spec, 0, sizeof(spec));
     // spec.freq = 48000;
-    // spec.channels = 2;
+    spec.channels = 2;
     //spec.samples = 4096;
     spec.callback = callback;
     spec.userdata = NULL;
