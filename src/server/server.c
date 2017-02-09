@@ -59,7 +59,7 @@ static void *run(void* user_data)
 
     audio_data_packet_t* packet = (audio_data_packet_t*) malloc(packet_size);
 
-    packet.header.top = PACKET_HEADER_START;
+    packet->header.top = PACKET_HEADER_START;
     packet->header.size = FRAME_SIZE * sizeof(uint8_t);
     packet->header.code = AUDIO_DATA;
     

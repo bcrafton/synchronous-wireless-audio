@@ -1,6 +1,8 @@
 
 // common stuff between server and client.
 
+#ifndef COMMON_H
+#define COMMON_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +83,7 @@ typedef struct audio_data_packet{
     uint8_t audio_data[];
 } audio_data_packet_t;
 
+#endif
 
 
 

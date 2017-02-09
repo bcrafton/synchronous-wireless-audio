@@ -1,4 +1,7 @@
 
+#ifndef SERVER_H
+#define SERVER_H
+
 #include "../common/common.h"
 #include "list.h"
 
@@ -36,3 +39,4 @@ server_status_code_t pause_audio();
 // TODO: change name of stop to stop_audio
 server_status_code_t stop();
 
+#endif
