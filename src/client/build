@@ -1,0 +1,1 @@
+gcc client.c ring_buf.c -pthread -I/usr/include/SDL2 -lSDL2
