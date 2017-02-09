@@ -72,6 +72,9 @@ server_status_code_t set_song(char* filepath)
         printf("couldn't load wav\n");
         return LOAD_SONG_ERROR;
     }
+
+    printf("freq: %d, samples: %d, channels: %d", spec.frequency, spec.samples, spec.channels);
+
     curr_pos = buffer;
     curr_length = length;
     return SUCCESS;
