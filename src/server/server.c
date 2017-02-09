@@ -28,8 +28,7 @@ uint32_t curr_length;
 
 static SDL_AudioSpec spec;
 
-const packet_header_t control_packet_header = {sizeof(control_code_t), CONTROL}; 
-const packet_header_t audio_packet_header = {FRAME_SIZE * sizeof(uint8_t), AUDIO_DATA};
+static pthread_mutex_t tcp_lock;
 
 server_status_code_t start()
 {
@@ -68,7 +67,8 @@ static void *run(void* user_data)
         // grab the lock
         // a lock needs to be grabbed so that setting devices and setting the song can be done
         //printf("%d %d %d", has_packets(), has_devices(), !audio_pause);
-        if(has_packets() && has_devices() && !audio_pause)
+        //if(has_packets() && has_devices() && !audio_pause)
+        if(has_packets() && has_devices())        
         {
             // this isnt really necessary.
             memcpy(packet->audio_data, curr_pos, FRAME_SIZE);
@@ -167,7 +167,7 @@ server_status_code_t play()
 
     send_data(&packet, sizeof(control_packet_t));
 
-    audio_pause = false;
+    //audio_pause = false;
     return SUCCESS;
 }
 
@@ -183,7 +183,7 @@ server_status_code_t pause_audio()
 
     send_data(&packet, sizeof(control_packet_t));
 
-    audio_pause = true;
+    //audio_pause = true;
     return SUCCESS;
 }
 
@@ -199,7 +199,7 @@ server_status_code_t stop()
 
     send_data(&packet, sizeof(control_packet_t));
 
-    audio_pause = true;
+    //audio_pause = true;
     return SUCCESS;
 }
 
@@ -211,7 +211,10 @@ static void send_data(void* buffer, unsigned int size)
     for(i=0; i<device_list->size; i++)
     {
         device_t* next = list_get(i, device_list);
+
+        pthread_mutex_lock(&tcp_lock);
         int status = write( next->sockfd, buffer, size);
+        pthread_mutex_unlock(&tcp_lock);
         if (status < 0)
         {
             perror("Error writing to socket\n");
