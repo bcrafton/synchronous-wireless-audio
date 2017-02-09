@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     // allocate the tcp swap buffer
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
-    SDL_memset(&spec, 0, sizeof(spec));
+    // SDL_memset(&spec, 0, sizeof(spec));
     spec.freq = 48000;
     spec.channels = 2;
     //spec.samples = 4096;
