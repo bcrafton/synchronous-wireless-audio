@@ -132,14 +132,14 @@ void callback(void *userdata, Uint8 *stream, int len) {
     pthread_mutex_unlock(&rbuf_mutex);
     for (i = 0; i < frames; i++)
     {
-	    memcpy(all_data, read_buffer(rbuf, FRAME_SIZE), FRAME_SIZE);
+	    memcpy(all_data, read_buffer(rbuf, FRAME_SIZE), sizeof(uint8_t) * FRAME_SIZE);
         all_data += FRAME_SIZE;
     }
     pthread_mutex_lock(&rbuf_mutex);
-    
+
     all_data -= len;
     
-	// if (data == NULL)
+	// if (all_data == NULL)
 	// {
 	// 	return;
 	// }
