@@ -123,15 +123,16 @@ void callback(void *userdata, Uint8 *stream, int len)
 {
 	assert(len == FRAME_SIZE);
 
+    pthread_mutex_unlock(&rbuf_mutex);
 	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
+    pthread_mutex_lock(&rbuf_mutex);
+    
 	if (data == NULL)
 	{
 		return;
 	}
-    pthread_mutex_lock(&rbuf_mutex);
     // copy from one buffer into the other
     SDL_memcpy(stream, data, len);
-    pthread_mutex_unlock(&rbuf_mutex);
 }
 
 static void* run_tcp_thread(void *data)
