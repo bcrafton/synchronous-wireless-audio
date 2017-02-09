@@ -28,10 +28,10 @@ int main(int argc, char *argv[]) {
     // allocate the tcp swap buffer
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
-    SDL_memset(&spec, 0, sizeof(spec));
-    spec.freq = 48000;
-    spec.channels = 2;
-    spec.samples = 4096;
+    //SDL_memset(&spec, 0, sizeof(spec));
+    //spec.freq = 48000;
+    //spec.channels = 2;
+    //spec.samples = 4096;
     spec.callback = callback;
     spec.userdata = NULL;
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
         exit(-1);
 	}
-
+    
     int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
     if (ret)
     {
@@ -51,6 +51,8 @@ int main(int argc, char *argv[]) {
 
     SDL_PauseAudio(0);
 
+    while(1);
+
     return 0;
 }
 
@@ -58,11 +60,9 @@ int read_socket(int socketfd, void* buffer, int size)
 {
     int total_read = 0;
     int total_left = size;
-    void* buffer_pointer = buffer;
     while(total_left > 0)
     {
-        int current = read(socketfd, buffer_pointer, total_left);    
-        
+        int current = read(socketfd, buffer, total_left);
         if(current < 0)
         {
             perror("error return code on socket read");
@@ -112,6 +112,7 @@ void wait_for_connection()
         {
             // get out of the inf while loop
             current_socket_fd = newsockfd;
+           printf("connected!\n");
             break;
         }
     }
@@ -120,10 +121,15 @@ void wait_for_connection()
 void callback(void *userdata, Uint8 *stream, int len) {
 	assert(len == FRAME_SIZE);
 
-    pthread_mutex_lock(&rbuf_mutex);
-    // copy from one buffer into the other
-	SDL_memcpy(stream, read_buffer(rbuf, FRAME_SIZE), len);
-    pthread_mutex_unlock(&rbuf_mutex);
+	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
+	if (data == NULL)
+	{
+		return;
+	}
+        pthread_mutex_lock(&rbuf_mutex);
+        // copy from one buffer into the other
+	SDL_memcpy(stream, data, len);
+        pthread_mutex_unlock(&rbuf_mutex);
 }
 
 static void* run_tcp_thread(void *data)
@@ -132,7 +138,7 @@ static void* run_tcp_thread(void *data)
     {
         // read from the tcp socket into the swap buffer
         read_socket(current_socket_fd, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
-        // attempt to acquite lock & copy from swap buffer into ring buffer
+	// attempt to acquite lock & copy from swap buffer into ring buffer
         pthread_mutex_lock(&rbuf_mutex);
         write_buffer(rbuf, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
         pthread_mutex_unlock(&rbuf_mutex);
