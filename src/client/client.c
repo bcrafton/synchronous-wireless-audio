@@ -41,6 +41,8 @@ int main(int argc, char *argv[]) {
         exit(-1);
 	}
     
+    printf("freq: %d, samples: %d, channels: %d\n", spec.freq, spec.samples, spec.channels);
+    
     int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
     if (ret)
     {
