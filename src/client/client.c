@@ -136,13 +136,13 @@ void callback(void *userdata, Uint8 *stream, int len) {
         all_data += FRAME_SIZE;
     }
     pthread_mutex_lock(&rbuf_mutex);
-
+    
     all_data -= len;
     
-	if (data == NULL)
-	{
-		return;
-	}
+	// if (data == NULL)
+	// {
+	// 	return;
+	// }
     // copy from one buffer into the other
     SDL_memcpy(stream, all_data, len);
 
