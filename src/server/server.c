@@ -18,7 +18,7 @@ static device_t* device;
 //static device_t* devices;
 //static int num_devices;
 
-static bool pause_audio = true;
+static bool audio_pause = true;
 
 static uint8_t* buffer;
 static uint32_t length;
@@ -27,6 +27,9 @@ uint8_t* curr_pos;
 uint32_t curr_length;
 
 static SDL_AudioSpec spec;
+
+const packet_header_t control_packet_header = {sizeof(control_code_t), CONTROL}; 
+const packet_header_t audio_packet_header = {FRAME_SIZE * sizeof(uint8_t), AUDIO_DATA};
 
 server_status_code_t start()
 {
@@ -52,14 +55,26 @@ server_status_code_t start()
 
 static void *run(void* user_data)
 {
+    uint32_t packet_size = sizeof(audio_data_packet_t) + FRAME_SIZE * sizeof(uint8_t);
+
+    audio_data_packet_t* packet = (audio_data_packet_t*) malloc(packet_size);
+
+    packet.header.top = PACKET_HEADER_START;
+    packet->header.size = FRAME_SIZE * sizeof(uint8_t);
+    packet->header.code = AUDIO_DATA;
+    
     while(1)
     {
         // grab the lock
         // a lock needs to be grabbed so that setting devices and setting the song can be done
-        //printf("%d %d %d", has_packets(), has_devices(), !pause_audio);
-        if(has_packets() && has_devices() && !pause_audio)
+        //printf("%d %d %d", has_packets(), has_devices(), !audio_pause);
+        if(has_packets() && has_devices() && !audio_pause)
         {
-            send_data(curr_pos, FRAME_SIZE);
+            // this isnt really necessary.
+            memcpy(packet->audio_data, curr_pos, FRAME_SIZE);
+
+            send_data(packet, packet_size);
+
             curr_length -= FRAME_SIZE;
             curr_pos += FRAME_SIZE;
         }
@@ -140,17 +155,55 @@ server_status_code_t set_device(char* ip_address)
     return SUCCESS;
 }
 
-server_status_code_t stop()
+server_status_code_t play()
 {
-    pause_audio = true;
+    control_packet_t packet;
+    
+    packet.header.top = PACKET_HEADER_START;
+    packet.header.size = sizeof(control_code_t);
+    packet.header.code = CONTROL;
+    
+    packet.control_code = PLAY;
+
+    send_data(&packet, sizeof(control_packet_t));
+
+    audio_pause = false;
     return SUCCESS;
 }
 
-server_status_code_t play()
+server_status_code_t pause_audio()
 {
-    pause_audio = false;
+    control_packet_t packet;
+    
+    packet.header.top = PACKET_HEADER_START;
+    packet.header.size = sizeof(control_code_t);
+    packet.header.code = CONTROL;
+    
+    packet.control_code = PAUSE;
+
+    send_data(&packet, sizeof(control_packet_t));
+
+    audio_pause = true;
     return SUCCESS;
 }
+
+server_status_code_t stop()
+{
+    control_packet_t packet;
+    
+    packet.header.top = PACKET_HEADER_START;
+    packet.header.size = sizeof(control_code_t);
+    packet.header.code = CONTROL;
+    
+    packet.control_code = STOP;
+
+    send_data(&packet, sizeof(control_packet_t));
+
+    audio_pause = true;
+    return SUCCESS;
+}
+
+
 
 static void send_data(void* buffer, unsigned int size) 
 {
