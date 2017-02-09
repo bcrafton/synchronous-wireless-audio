@@ -171,14 +171,17 @@ static void* run_tcp_thread(void *data)
         
     }
     /*
-    while (!isFull(rbuf))
+    while(1)
     {
-        // read from the tcp socket into the swap buffer
-        read_socket(current_socket_fd, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
-	    // attempt to acquite lock & copy from swap buffer into ring buffer
-        pthread_mutex_lock(&rbuf_mutex);
-        write_buffer(rbuf, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
-        pthread_mutex_unlock(&rbuf_mutex);
+        if(!isFull(rbuf))
+        {
+            // read from the tcp socket into the swap buffer
+            read_socket(current_socket_fd, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
+    	    // attempt to acquite lock & copy from swap buffer into ring buffer
+            pthread_mutex_lock(&rbuf_mutex);
+            write_buffer(rbuf, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
+            pthread_mutex_unlock(&rbuf_mutex);
+        }
     }
     */
 }
