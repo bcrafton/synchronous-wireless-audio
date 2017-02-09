@@ -122,7 +122,8 @@ void wait_for_connection()
 
 void callback(void *userdata, Uint8 *stream, int len) {
     printf("callback len: %d\n", len);
-	assert(len == FRAME_SIZE);
+	// assert(len == FRAME_SIZE);
+    len = ( len > FRAME_SIZE ? FRAME_SIZE : len );
 
 	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
 	if (data == NULL)
