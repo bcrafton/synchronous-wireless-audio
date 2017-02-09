@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	}
     
     printf("freq: %d, samples: %d, channels: %d\n", spec.freq, spec.samples, spec.channels);
-    
+
     int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
     if (ret)
     {
@@ -121,6 +121,7 @@ void wait_for_connection()
 }
 
 void callback(void *userdata, Uint8 *stream, int len) {
+    printf("callback len: %d\n", len);
 	assert(len == FRAME_SIZE);
 
 	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
