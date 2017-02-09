@@ -146,7 +146,7 @@ void callback(void *userdata, Uint8 *stream, int len) {
 		return;
 	}
     // copy from one buffer into the other
-    SDL_memcpy(stream, all_data, len);
+    SDL_memcpy(stream, data, len);
 
     // free(all_data);
 }
