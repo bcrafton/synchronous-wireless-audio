@@ -172,12 +172,12 @@ static void send_data(void* buffer, unsigned int size)
 
 static bool has_devices()
 {
-	return device_list->size != 0;
+    return device_list->size != 0;
 }
 
 static bool has_packets()
 {
-	return curr_length > 0;
+    return curr_length > 0;
 }
 
 int main()
