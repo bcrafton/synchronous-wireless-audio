@@ -28,10 +28,10 @@ int main(int argc, char *argv[]) {
     // allocate the tcp swap buffer
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
-    //SDL_memset(&spec, 0, sizeof(spec));
-    //spec.freq = 48000;
-    //spec.channels = 2;
-    //spec.samples = 4096;
+    spec.freq = 44100;
+    spec.channels = 2;
+    spec.samples = 1024;
+    spec.format = 0x8010;
     spec.callback = callback;
     spec.userdata = NULL;
 
@@ -123,10 +123,10 @@ void callback(void *userdata, Uint8 *stream, int len)
 {
 	assert(len == FRAME_SIZE);
 
-    pthread_mutex_unlock(&rbuf_mutex);
-	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
     pthread_mutex_lock(&rbuf_mutex);
-    
+	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
+    pthread_mutex_unlock(&rbuf_mutex);
+
 	if (data == NULL)
 	{
 		return;
@@ -167,7 +167,9 @@ static void* run_tcp_thread(void *data)
         {
             read_socket(current_socket_fd, audio_data, FRAME_SIZE * sizeof(uint8_t));
             while(isFull(rbuf));
+            pthread_mutex_lock(&rbuf_mutex);
             write_buffer(rbuf, audio_data, sizeof(uint8_t) * FRAME_SIZE);
+            pthread_mutex_unlock(&rbuf_mutex);
         }
         
     }
