@@ -49,7 +49,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    SDL_PauseAudio(0);
+    // dont want to start playing until we are told to do so
+    //SDL_PauseAudio(0);
 
     while(1);
 
@@ -142,7 +143,7 @@ static void* run_tcp_thread(void *data)
     while(1)
     {
         read_socket(current_socket_fd, &packet, sizeof(packet_header_t));
-        printf("%d %d %d\n", packet.top, packet.size, packet.code);
+        //printf("%x %x %x\n", packet.top, packet.size, packet.code);
         
         assert(packet.top == PACKET_HEADER_START);
         assert(packet.code == CONTROL || packet.code == AUDIO_DATA);
@@ -151,6 +152,15 @@ static void* run_tcp_thread(void *data)
         if(packet.code == CONTROL)
         {
             read_socket(current_socket_fd, &control_code, sizeof(control_code_t));
+            if(control_code == PLAY)
+            {
+                printf("Play!");
+                SDL_PauseAudio(0);	
+            }
+            else if(control_code == PAUSE || control_code == STOP)
+            {
+                SDL_PauseAudio(1);
+            }
         }
         else if(packet.code == AUDIO_DATA)
         {
