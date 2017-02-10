@@ -87,6 +87,7 @@ server_status_code_t set_song(char* filepath)
         printf("couldn't load wav\n");
         return LOAD_SONG_ERROR;
     }
+    //printf("%x %x %x %x %x %x\n", spec.freq, spec.format, spec.channels, spec.samples, spec.size, spec.callback);
     curr_pos = buffer;
     curr_length = length;
     return SUCCESS;
@@ -163,7 +164,8 @@ server_status_code_t play()
     packet.header.size = sizeof(control_code_t);
     packet.header.code = CONTROL;
     
-    packet.control_code = PLAY;
+    packet.data.control_code = PLAY;
+    memcpy(&packet.data.spec, &spec, sizeof(SDL_AudioSpec));
 
     send_data(&packet, sizeof(control_packet_t));
 
@@ -179,7 +181,7 @@ server_status_code_t pause_audio()
     packet.header.size = sizeof(control_code_t);
     packet.header.code = CONTROL;
     
-    packet.control_code = PAUSE;
+    packet.data.control_code = PAUSE;
 
     send_data(&packet, sizeof(control_packet_t));
 
@@ -195,7 +197,7 @@ server_status_code_t stop()
     packet.header.size = sizeof(control_code_t);
     packet.header.code = CONTROL;
     
-    packet.control_code = STOP;
+    packet.data.control_code = STOP;
 
     send_data(&packet, sizeof(control_packet_t));
 
@@ -221,7 +223,7 @@ static void send_data(void* buffer, unsigned int size)
         }
         else
         {
-            printf("Great Success!\n");
+            //printf("Great Success!\n");
         }
     }
 }

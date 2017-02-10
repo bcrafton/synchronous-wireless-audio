@@ -69,9 +69,14 @@ typedef enum control_code{
     KILL =    0x04A5A5A5,
 } control_code_t;
 
+typedef struct control_data{
+    control_code_t control_code;
+    SDL_AudioSpec spec;
+} control_data_t;
+
 typedef struct control_packet{
     packet_header_t header;
-    control_code_t control_code;
+    control_data_t data;
 } control_packet_t;
 
 //////////////////////////////////

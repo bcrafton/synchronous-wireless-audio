@@ -108,12 +108,12 @@ class Example(Frame):
         song_var.set(location)
 
     def add_device(self, ip_address):
-        ip_address = "192.168.0.100"
+        ip_address = "192.168.0.101"
         status = self.server.set_device(ctypes.c_char_p(ip_address))
         print "set device status: " + str(status)
-        ip_address = "192.168.0.102"
-        status = self.server.set_device(ctypes.c_char_p(ip_address))
-        print "set device status: " + str(status)
+        #ip_address = "192.168.0.102"
+        #status = self.server.set_device(ctypes.c_char_p(ip_address))
+        #print "set device status: " + str(status)
     
 
 def main():
