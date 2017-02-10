@@ -88,6 +88,7 @@ server_status_code_t set_song(char* filepath)
         return LOAD_SONG_ERROR;
     }
     //printf("%x %x %x %x %x %x\n", spec.freq, spec.format, spec.channels, spec.samples, spec.size, spec.callback);
+    printf("%d %d %d\n", sizeof(control_data_t), sizeof(control_code_t), sizeof(SDL_AudioSpec));
     curr_pos = buffer;
     curr_length = length;
     return SUCCESS;
@@ -161,11 +162,14 @@ server_status_code_t play()
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
-    packet.header.size = sizeof(control_code_t);
+    packet.header.size = sizeof(control_data_t);
     packet.header.code = CONTROL;
     
     packet.data.control_code = PLAY;
-    memcpy(&packet.data.spec, &spec, sizeof(SDL_AudioSpec));
+
+    packet.spec.freq = spec.freq;
+    packet.spec.format = spec.format;    
+    packet.spec.channels = spec.channels;
 
     send_data(&packet, sizeof(control_packet_t));
 
@@ -178,7 +182,7 @@ server_status_code_t pause_audio()
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
-    packet.header.size = sizeof(control_code_t);
+    packet.header.size = sizeof(control_data_t);
     packet.header.code = CONTROL;
     
     packet.data.control_code = PAUSE;
@@ -194,7 +198,7 @@ server_status_code_t stop()
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
-    packet.header.size = sizeof(control_code_t);
+    packet.header.size = sizeof(control_data_t);
     packet.header.code = CONTROL;
     
     packet.data.control_code = STOP;
