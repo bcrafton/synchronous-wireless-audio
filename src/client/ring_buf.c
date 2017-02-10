@@ -114,7 +114,7 @@ int test_ring_buf()
     return 0;
 }
 
-int main()
-{
-    test_ring_buf();
-}
+// int main()
+// {
+//     test_ring_buf();
+// }
