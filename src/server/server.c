@@ -167,9 +167,9 @@ server_status_code_t play()
     
     packet.data.control_code = PLAY;
 
-    packet.spec.freq = spec.freq;
-    packet.spec.format = spec.format;    
-    packet.spec.channels = spec.channels;
+    packet.data.spec.freq = spec.freq;
+    packet.data.spec.format = spec.format;    
+    packet.data.spec.channels = spec.channels;
 
     send_data(&packet, sizeof(control_packet_t));
 
