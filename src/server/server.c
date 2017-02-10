@@ -87,8 +87,6 @@ server_status_code_t set_song(char* filepath)
         printf("couldn't load wav\n");
         return LOAD_SONG_ERROR;
     }
-    //printf("%x %x %x %x %x %x\n", spec.freq, spec.format, spec.channels, spec.samples, spec.size, spec.callback);
-    printf("%d %d %d\n", sizeof(control_data_t), sizeof(control_code_t), sizeof(SDL_AudioSpec));
     curr_pos = buffer;
     curr_length = length;
     return SUCCESS;
