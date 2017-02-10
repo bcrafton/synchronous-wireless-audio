@@ -58,6 +58,11 @@ uint8_t* read_buffer(ring_buf_t* b, uint32_t size)
     return ret;
 }
 
+void clear_buffer(ring_buf_t* b)
+{
+    b->wr = b->rd;
+}
+
 int test_ring_buf()
 {
     ring_buf_t* b = new_ring_buf(TEST_BUFFER_SIZE, FRAME_SIZE);
@@ -100,10 +105,16 @@ int test_ring_buf()
     ret_data = read_buffer(b, FRAME_SIZE);
     assert(ret_data == NULL);
 
+    // clear the buffer
+    clear_buffer(b);
+    assert(b->wr == b->rd);
+    // double check that the buffer is cleared/empty
+    assert(isEmpty(b));
+
     return 0;
 }
 
-// int main()
-// {
-//     test_ring_buf();
-// }
+int main()
+{
+    test_ring_buf();
+}
