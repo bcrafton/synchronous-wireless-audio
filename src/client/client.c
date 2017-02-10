@@ -28,19 +28,6 @@ int main(int argc, char *argv[]) {
     // allocate the tcp swap buffer
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
-    spec.freq = 44100;
-    spec.channels = 2;
-    spec.samples = 1024;
-    spec.format = 0x8010;
-    spec.callback = callback;
-    spec.userdata = NULL;
-
-    if ( SDL_OpenAudio(&spec, NULL) < 0 )
-    {
-        fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-        exit(-1);
-	}
-    
     int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
     if (ret)
     {
@@ -48,9 +35,6 @@ int main(int argc, char *argv[]) {
         // add an enumeration for this error case
         exit(1);
     }
-
-    // dont want to start playing until we are told to do so
-    //SDL_PauseAudio(0);
 
     while(1);
 
@@ -139,26 +123,40 @@ static void* run_tcp_thread(void *data)
 {
     packet_header_t packet;
     uint8_t* audio_data = (uint8_t*) malloc(FRAME_SIZE * sizeof(uint8_t));
-    control_code_t control_code;
+    control_data_t control_data;
 
     while(1)
     {
         read_socket(current_socket_fd, &packet, sizeof(packet_header_t));
-        //printf("%x %x %x\n", packet.top, packet.size, packet.code);
         
         assert(packet.top == PACKET_HEADER_START);
         assert(packet.code == CONTROL || packet.code == AUDIO_DATA);
-        assert(packet.size == sizeof(control_code_t) || packet.size == FRAME_SIZE);
+        assert(packet.size == sizeof(control_data_t) || packet.size == FRAME_SIZE);
         
         if(packet.code == CONTROL)
         {
-            read_socket(current_socket_fd, &control_code, sizeof(control_code_t));
-            if(control_code == PLAY)
+            read_socket(current_socket_fd, &control_data, sizeof(control_data_t));
+            if(control_data.control_code == PLAY)
             {
-                printf("Play!");
-                SDL_PauseAudio(0);	
+                printf("Play!\n");
+                SDL_CloseAudio();
+
+                spec.freq = control_data.spec.freq;
+                spec.format = control_data.spec.format;
+                spec.channels = control_data.spec.channels;
+                uint8_t sample_size = spec.format & 0xFF;
+                spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
+                spec.callback = callback;
+                spec.userdata = NULL;
+
+                if ( SDL_OpenAudio(&spec, NULL) < 0 )
+                {
+                    fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+                    exit(-1);
+	            }
+                SDL_PauseAudio(0);
             }
-            else if(control_code == PAUSE || control_code == STOP)
+            else if(control_data.control_code == PAUSE || control_data.control_code == STOP)
             {
                 SDL_PauseAudio(1);
             }
@@ -171,22 +169,7 @@ static void* run_tcp_thread(void *data)
             write_buffer(rbuf, audio_data, sizeof(uint8_t) * FRAME_SIZE);
             pthread_mutex_unlock(&rbuf_mutex);
         }
-        
     }
-    /*
-    while(1)
-    {
-        if(!isFull(rbuf))
-        {
-            // read from the tcp socket into the swap buffer
-            read_socket(current_socket_fd, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
-    	    // attempt to acquite lock & copy from swap buffer into ring buffer
-            pthread_mutex_lock(&rbuf_mutex);
-            write_buffer(rbuf, swap_buf, sizeof(uint8_t) * FRAME_SIZE);
-            pthread_mutex_unlock(&rbuf_mutex);
-        }
-    }
-    */
 }
 
 

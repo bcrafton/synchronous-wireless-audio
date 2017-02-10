@@ -69,9 +69,24 @@ typedef enum control_code{
     KILL =    0x04A5A5A5,
 } control_code_t;
 
+// this is really dumb, but the pi and my linux machine dont see sdl audio spec the same
+// so we need a wrapper to pass the important stuff.
+typedef struct sdl_audio_spec{
+    int freq;
+    // pretty sure this is a 16 bit value.
+    SDL_AudioFormat format;
+    // uint16_t format;
+    uint8_t channels;
+} sdl_audio_spec_t;
+
+typedef struct control_data{
+    control_code_t control_code;
+    sdl_audio_spec_t spec;
+} control_data_t;
+
 typedef struct control_packet{
     packet_header_t header;
-    control_code_t control_code;
+    control_data_t data;
 } control_packet_t;
 
 //////////////////////////////////

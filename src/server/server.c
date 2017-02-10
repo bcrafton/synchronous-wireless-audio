@@ -160,10 +160,14 @@ server_status_code_t play()
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
-    packet.header.size = sizeof(control_code_t);
+    packet.header.size = sizeof(control_data_t);
     packet.header.code = CONTROL;
     
-    packet.control_code = PLAY;
+    packet.data.control_code = PLAY;
+
+    packet.data.spec.freq = spec.freq;
+    packet.data.spec.format = spec.format;    
+    packet.data.spec.channels = spec.channels;
 
     send_data(&packet, sizeof(control_packet_t));
 
@@ -176,10 +180,10 @@ server_status_code_t pause_audio()
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
-    packet.header.size = sizeof(control_code_t);
+    packet.header.size = sizeof(control_data_t);
     packet.header.code = CONTROL;
     
-    packet.control_code = PAUSE;
+    packet.data.control_code = PAUSE;
 
     send_data(&packet, sizeof(control_packet_t));
 
@@ -192,10 +196,10 @@ server_status_code_t stop()
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
-    packet.header.size = sizeof(control_code_t);
+    packet.header.size = sizeof(control_data_t);
     packet.header.code = CONTROL;
     
-    packet.control_code = STOP;
+    packet.data.control_code = STOP;
 
     send_data(&packet, sizeof(control_packet_t));
 
@@ -221,7 +225,7 @@ static void send_data(void* buffer, unsigned int size)
         }
         else
         {
-            printf("Great Success!\n");
+            //printf("Great Success!\n");
         }
     }
 }
