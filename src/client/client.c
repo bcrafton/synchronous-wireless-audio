@@ -15,8 +15,6 @@ static pthread_mutex_t rbuf_mutex;
 static uint8_t* swap_buf;
 
 int main(int argc, char *argv[]) {
-    wait_for_connection();
-    
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
     {
         return 1;
@@ -28,15 +26,20 @@ int main(int argc, char *argv[]) {
     // allocate the tcp swap buffer
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
 
-    int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
-    if (ret)
+    while(1)
     {
-        fprintf(stderr,"Error: pthread_create() return code: %d\n", ret);
-        // add an enumeration for this error case
-        exit(1);
-    }
+        wait_for_connection();
 
-    while(1);
+        int ret = pthread_create(&tcp_thread, NULL, run_tcp_thread, NULL);
+        if (ret)
+        {
+          fprintf(stderr,"Error: pthread_create() return code: %d\n", ret);
+          // add an enumeration for this error case
+          exit(1);
+        }
+        
+        pthread_join(tcp_thread, NULL);
+    }
 
     return 0;
 }
@@ -139,6 +142,9 @@ static void* run_tcp_thread(void *data)
             if(control_data.control_code == PLAY)
             {
                 printf("Play!\n");
+                // could probably use a status thing here so we dont 
+                // have to just close it everytime ... or at all
+                // SDL_AudioClosed() ???
                 SDL_CloseAudio();
 
                 spec.freq = control_data.spec.freq;
@@ -153,12 +159,24 @@ static void* run_tcp_thread(void *data)
                 {
                     fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
                     exit(-1);
-	            }
+	              }
                 SDL_PauseAudio(0);
             }
-            else if(control_data.control_code == PAUSE || control_data.control_code == STOP)
+            else if(control_data.control_code == PAUSE)
             {
                 SDL_PauseAudio(1);
+            }
+            else if(control_data.control_code == STOP)
+            {
+                SDL_CloseAudio();
+                clear_buffer(rbuf);
+            }
+            else if(control_data.control_code == KILL)
+            {
+                SDL_CloseAudio();
+                clear_buffer(rbuf);
+                close(current_socket_fd);
+                return 0;
             }
         }
         else if(packet.code == AUDIO_DATA)
