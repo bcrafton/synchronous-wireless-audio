@@ -31,9 +31,13 @@ bool isEmpty(ring_buf_t* b)
 bool write_buffer(ring_buf_t* b, uint8_t* data, uint32_t size)
 {
     // do not write to the buffer if it is already full
-    if (isFull(b))
+    if (isEmpty(b))
     {
         return false;
+    }
+    if (isFull(b))
+    {
+        b->wr = b->buffer;
     }
     assert(size == b->frame_size);
 
@@ -49,6 +53,10 @@ uint8_t* read_buffer(ring_buf_t* b, uint32_t size)
     if (isEmpty(b))
     {
         return NULL;
+    }
+    if (isFull(b))
+    {
+        b->rd = b->buffer;
     }
     assert(size == b->frame_size);
 

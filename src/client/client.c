@@ -156,9 +156,14 @@ static void* run_tcp_thread(void *data)
 	            }
                 SDL_PauseAudio(0);
             }
-            else if(control_data.control_code == PAUSE || control_data.control_code == STOP)
+            else if(control_data.control_code == PAUSE)
             {
                 SDL_PauseAudio(1);
+            }
+            else if(control_data.control_code == STOP)
+            {
+                SDL_PauseAudio(1);
+                clear_buffer(rbuf)
             }
         }
         else if(packet.code == AUDIO_DATA)
