@@ -77,8 +77,16 @@ class Example(Frame):
         set_song_button = Button(self, text="Set Song", command=lambda: self.set_song(song_location.get()))
         set_song_button.pack(side=RIGHT, padx=5, pady=5)
 
+        kill_button = Button(self, text="Kill Device", command=lambda: self.remove_device())
+        kill_button.pack(side=RIGHT, padx=5, pady=5)
+
     def play(self):
         self.server.play()
+
+    def remove_device(self):
+        ip_address = "192.168.0.100"
+        status = self.server.kill_device(ctypes.c_char_p(ip_address))
+        print "kill status: " + str(status)
 
     def stop(self):
         self.server.stop()
@@ -97,7 +105,7 @@ class Example(Frame):
         song_var.set(location)
 
     def add_device(self, ip_address):
-        ip_address = "192.168.0.101"
+        ip_address = "192.168.0.100"
         status = self.server.set_device(ctypes.c_char_p(ip_address))
         print "set device status: " + str(status)
         #ip_address = "192.168.0.102"

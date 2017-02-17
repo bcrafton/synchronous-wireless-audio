@@ -40,14 +40,14 @@ server_status_code_t start()
 	    return 1;
     }
 
-	int ret = pthread_create( &main_loop, NULL, run, NULL);
-	if(ret)
-	{
-		fprintf(stderr,"Error - pthread_create() return code: %d\n", ret);
-		return SERVER_START_ERROR;
-	}
-	// we do not want to wait for the thread to finish
-	//pthread_join(main_loop, NULL);
+    int ret = pthread_create( &main_loop, NULL, run, NULL);
+    if(ret)
+    {
+      fprintf(stderr,"Error - pthread_create() return code: %d\n", ret);
+      return SERVER_START_ERROR;
+    }
+    // we do not want to wait for the thread to finish
+    //pthread_join(main_loop, NULL);
     return SUCCESS;
 }
 
@@ -63,10 +63,8 @@ static void *run(void* user_data)
     
     while(1)
     {
-        // grab the lock
-        // a lock needs to be grabbed so that setting devices and setting the song can be done
-        //printf("%d %d %d", has_packets(), has_devices(), !audio_pause);
-        //if(has_packets() && has_devices() && !audio_pause)
+        // probably going to need a lock instead of this static bool for play.
+        // should not be able to stop a song immediatly ... they need to share a lock.
         if(has_packets() && has_devices())        
         {
             // this isnt really necessary.
@@ -99,7 +97,10 @@ server_status_code_t set_device(char* ip_address)
     }
 
     device_t* device = (device_t*) malloc(sizeof(device_t));
-    //device = (device_t*) malloc(sizeof(device_t));
+
+    memset(device->ip_address, '\0', IP_ADDRESS_BUFFER_SIZE);
+    strcpy(device->ip_address, ip_address);
+
     device->sockfd = socket(AF_INET, SOCK_STREAM, 0); 
 
     int ret;
@@ -161,6 +162,15 @@ server_status_code_t set_device(char* ip_address)
 
 server_status_code_t play()
 {
+    if(!has_devices())
+    {
+        return NO_CONNECTED_DEVICES;
+    }
+    if(!has_packets())
+    {
+        return NO_PACKETS;
+    }
+    
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
@@ -181,6 +191,15 @@ server_status_code_t play()
 
 server_status_code_t pause_audio()
 {
+    if(!has_devices())
+    {
+        return NO_CONNECTED_DEVICES;
+    }
+    if(!has_packets())
+    {
+        return NO_PACKETS;
+    }
+
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
@@ -197,6 +216,15 @@ server_status_code_t pause_audio()
 
 server_status_code_t stop()
 {
+    if(!has_devices())
+    {
+        return NO_CONNECTED_DEVICES;
+    }
+    if(!has_packets())
+    {
+        return NO_PACKETS;
+    }
+
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
@@ -207,12 +235,27 @@ server_status_code_t stop()
 
     broadcast_data(&packet, sizeof(control_packet_t));
 
+    SDL_FreeWAV(buffer);
+    length = 0;
+    curr_length = 0;
+    curr_pos = NULL;
+    buffer = NULL;
+
     //audio_pause = true;
     return SUCCESS;
 }
 
 server_status_code_t kill_device(char* ip_address)
 {
+    if(!has_devices())
+    {
+        return NO_CONNECTED_DEVICES;
+    }
+    if(!has_packets())
+    {
+        return NO_PACKETS;
+    }
+
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
@@ -303,7 +346,10 @@ static device_t* remove_device(char* ip_address)
         device_t* next = list_get(i, device_list);
         if(strcmp(next->ip_address, ip_address) == 0)
         {
-            return list_remove(i, device_list);
+            pthread_mutex_lock(&tcp_lock);
+            device_t* removed_device = list_remove(i, device_list);
+            pthread_mutex_unlock(&tcp_lock);
+            return removed_device;
         }
     }
     return NULL;

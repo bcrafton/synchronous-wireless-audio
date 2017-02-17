@@ -18,6 +18,8 @@ typedef enum server_status_code{
     TIMEOUT_ERROR = 6,
     DEVICE_ALREADY_CONNECTED = 7,
     DEVICE_NOT_CONNECTED = 8,
+    NO_CONNECTED_DEVICES = 9,
+    NO_PACKETS = 10,
 }server_status_code_t;
 
 typedef struct device{
