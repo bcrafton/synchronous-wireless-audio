@@ -164,15 +164,19 @@ static void* run_tcp_thread(void *data)
             }
             else if(control_data.control_code == PAUSE)
             {
+                printf("Pause!");
                 SDL_PauseAudio(1);
             }
             else if(control_data.control_code == STOP)
             {
+                printf("Stop!\n");
                 SDL_CloseAudio();
                 clear_buffer(rbuf);
             }
             else if(control_data.control_code == KILL)
             {
+                printf("Kill!\n");
+                SDL_PauseAudio(1);
                 SDL_CloseAudio();
                 clear_buffer(rbuf);
                 close(current_socket_fd);
