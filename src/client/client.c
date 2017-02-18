@@ -180,7 +180,7 @@ static void* run_tcp_thread(void *data)
                 SDL_CloseAudio();
                 clear_buffer(rbuf);
                 close(current_socket_fd);
-                return 0;
+                //return 0;
             }
         }
         else if(packet.code == AUDIO_DATA)
