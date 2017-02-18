@@ -19,15 +19,16 @@ static List* device_list;
 
 static bool audio_pause = true;
 
-static uint8_t* buffer;
-static uint32_t length;
+static uint8_t* buffer = NULL;
+static uint32_t length = 0;
 
-uint8_t* curr_pos;
-uint32_t curr_length;
+static uint8_t* curr_pos = NULL;
+static uint32_t curr_length = 0;
 
 static SDL_AudioSpec spec;
 
 static pthread_mutex_t tcp_lock;
+static pthread_mutex_t packet_lock;
 
 server_status_code_t start()
 {
@@ -65,7 +66,8 @@ static void *run(void* user_data)
     {
         // probably going to need a lock instead of this static bool for play.
         // should not be able to stop a song immediatly ... they need to share a lock.
-        if(has_packets() && has_devices())        
+        pthread_mutex_lock(&packet_lock);
+        if(has_packets() && has_devices())
         {
             // this isnt really necessary.
             memcpy(packet->audio_data, curr_pos, FRAME_SIZE);
@@ -75,17 +77,20 @@ static void *run(void* user_data)
             curr_length -= FRAME_SIZE;
             curr_pos += FRAME_SIZE;
         }
+        pthread_mutex_unlock(&packet_lock); 
     }
 }
 
 server_status_code_t set_song(char* filepath)
 {
+    pthread_mutex_lock(&packet_lock);
     if( SDL_LoadWAV(filepath, &spec, &buffer, &length) == NULL ){
         printf("couldn't load wav\n");
         return LOAD_SONG_ERROR;
     }
     curr_pos = buffer;
     curr_length = length;
+    pthread_mutex_unlock(&packet_lock);
     return SUCCESS;
 }
 
@@ -224,6 +229,7 @@ server_status_code_t stop()
     {
         return NO_PACKETS;
     }
+    pthread_mutex_lock(&packet_lock);
 
     control_packet_t packet;
     
@@ -241,7 +247,7 @@ server_status_code_t stop()
     curr_pos = NULL;
     buffer = NULL;
 
-    //audio_pause = true;
+    pthread_mutex_unlock(&packet_lock);
     return SUCCESS;
 }
 
@@ -250,10 +256,6 @@ server_status_code_t kill_device(char* ip_address)
     if(!has_devices())
     {
         return NO_CONNECTED_DEVICES;
-    }
-    if(!has_packets())
-    {
-        return NO_PACKETS;
     }
 
     control_packet_t packet;
@@ -269,7 +271,7 @@ server_status_code_t kill_device(char* ip_address)
     {
         return DEVICE_NOT_CONNECTED;
     }
-
+    printf("sending control packet\n");
     // send to just one of the devices
     send_data(device, &packet, sizeof(control_packet_t));
 
@@ -310,7 +312,7 @@ static void send_data(device_t* device, void* buffer, unsigned int size)
     }
     else
     {
-        //printf("Great Success!\n");
+        printf("Great Success!\n");
     }
 }
 
@@ -321,7 +323,9 @@ static bool has_devices()
 
 static bool has_packets()
 {
-    return curr_length > 0;
+    // we can do this or we can send a partial packet...
+    // may want to return a enum
+    return curr_length >= FRAME_SIZE;
 }
 
 static bool contains_device(char* ip_address)
