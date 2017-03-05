@@ -276,13 +276,14 @@ server_status_code_t kill_device(char* ip_address)
     packet.data.control_code = KILL;
 
     // do we need to use a lock here to prevent getting null pointer?
-
+    
     device_t* device = get_device(ip_address);
     if(device == NULL)
     {
         return DEVICE_NOT_CONNECTED;
     }
-    /*    
+    // REMOVE DEVICE DOES NOT WORK, BUT GET DOES...
+    /*
     device_t* device = remove_device(ip_address);
     if(device == NULL)
     {
@@ -292,7 +293,16 @@ server_status_code_t kill_device(char* ip_address)
     printf("sending control packet\n");
     // send to just one of the devices
     send_data(device, &packet, sizeof(control_packet_t));
-    
+    /*
+    struct linger so_linger;
+    so_linger.l_onoff = 1;
+    so_linger.l_linger = 30;
+    int z = setsockopt(device->sockfd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
+    if(z)
+    {
+        perror("error");
+    }
+    */
     // do we wait to confirm it was sent
     // we dont get the kill code coming up ... think this might be doing it
     // we NEED TO BREAK HE PROBLEM DOWN
@@ -301,7 +311,11 @@ server_status_code_t kill_device(char* ip_address)
     // how is it that hard to know to do this?
     // cant really do this right now, need to connect to the pi
     
-    //close(device->sockfd);
+    // trying to put in a hack to make this thing work ...
+    // dont want sleep for real.
+
+    //sleep(1);
+    close(device->sockfd);
 
     return SUCCESS;
 }

@@ -146,7 +146,7 @@ static void* run_tcp_thread(void *data)
                 // have to just close it everytime ... or at all
                 // SDL_AudioClosed() ???
                 
-                /*
+#if(!LOCAL_HOST_ONLY)
                 SDL_CloseAudio();
 
                 spec.freq = control_data.spec.freq;
@@ -163,28 +163,34 @@ static void* run_tcp_thread(void *data)
                     exit(-1);
 	            }
                 SDL_PauseAudio(0);
-                */
+#endif
             }
             else if(control_data.control_code == PAUSE)
             {
                 printf("Pause!");
-                //SDL_PauseAudio(1);
+#if(!LOCAL_HOST_ONLY)
+                SDL_PauseAudio(1);
+#endif
             }
             else if(control_data.control_code == STOP)
             {
                 printf("Stop!\n");
-                //SDL_CloseAudio();
+#if(!LOCAL_HOST_ONLY)
+                SDL_CloseAudio();
+#endif
                 clear_buffer(rbuf);
             }
             else if(control_data.control_code == KILL)
             {
                 printf("Kill!\n");
+#if(!LOCAL_HOST_ONLY)
                 //SDL_PauseAudio(1);
                 //SDL_CloseAudio();
+#endif
                 clear_buffer(rbuf);
-                //close(current_socket_fd);
-                // we return here because we want to kill this thread.                
-                //return 0;
+                close(current_socket_fd);
+                // we return here because we want to kill this thread
+                return 0;
             }
         }
         else if(packet.code == AUDIO_DATA)

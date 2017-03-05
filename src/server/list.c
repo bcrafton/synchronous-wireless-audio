@@ -135,7 +135,7 @@ LIST_TYPE list_remove(int index, List *list){
 		return NULL;
 	}
 	if(list->size == 1){
-    Node* ptr = list->head;
+        Node* ptr = list->head;
 		list->head = NULL;
 		list->tail = NULL;
 		list->size--;
