@@ -145,6 +145,8 @@ static void* run_tcp_thread(void *data)
                 // could probably use a status thing here so we dont 
                 // have to just close it everytime ... or at all
                 // SDL_AudioClosed() ???
+                
+                /*
                 SDL_CloseAudio();
 
                 spec.freq = control_data.spec.freq;
@@ -154,32 +156,34 @@ static void* run_tcp_thread(void *data)
                 spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
                 spec.callback = callback;
                 spec.userdata = NULL;
-
+                
                 if ( SDL_OpenAudio(&spec, NULL) < 0 )
                 {
                     fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
                     exit(-1);
-	              }
+	            }
                 SDL_PauseAudio(0);
+                */
             }
             else if(control_data.control_code == PAUSE)
             {
                 printf("Pause!");
-                SDL_PauseAudio(1);
+                //SDL_PauseAudio(1);
             }
             else if(control_data.control_code == STOP)
             {
                 printf("Stop!\n");
-                SDL_CloseAudio();
+                //SDL_CloseAudio();
                 clear_buffer(rbuf);
             }
             else if(control_data.control_code == KILL)
             {
                 printf("Kill!\n");
-                SDL_PauseAudio(1);
-                SDL_CloseAudio();
+                //SDL_PauseAudio(1);
+                //SDL_CloseAudio();
                 clear_buffer(rbuf);
-                close(current_socket_fd);
+                //close(current_socket_fd);
+                // we return here because we want to kill this thread.                
                 //return 0;
             }
         }

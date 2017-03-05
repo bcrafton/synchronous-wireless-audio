@@ -10,6 +10,7 @@ static void send_data(device_t* device, void* buffer, unsigned int size);
 
 static device_t* remove_device(char* ip_address);
 static bool contains_device(char* ip_address);
+static device_t* get_device(char* ip_address);
 
 static pthread_t main_loop;
 
@@ -67,6 +68,7 @@ static void *run(void* user_data)
         // probably going to need a lock instead of this static bool for play.
         // should not be able to stop a song immediatly ... they need to share a lock.
         pthread_mutex_lock(&packet_lock);
+        //printf("%d %d %d\n", has_packets(), has_devices(), curr_length);
         if(has_packets() && has_devices())
         {
             // this isnt really necessary.
@@ -171,11 +173,13 @@ server_status_code_t play()
     {
         return NO_CONNECTED_DEVICES;
     }
+    /*
     if(!has_packets())
     {
         return NO_PACKETS;
     }
-    
+    */
+
     control_packet_t packet;
     
     packet.header.top = PACKET_HEADER_START;
@@ -200,10 +204,12 @@ server_status_code_t pause_audio()
     {
         return NO_CONNECTED_DEVICES;
     }
+    /*
     if(!has_packets())
     {
         return NO_PACKETS;
     }
+    */
 
     control_packet_t packet;
     
@@ -225,10 +231,13 @@ server_status_code_t stop()
     {
         return NO_CONNECTED_DEVICES;
     }
+    /*
     if(!has_packets())
     {
         return NO_PACKETS;
     }
+    */
+
     pthread_mutex_lock(&packet_lock);
 
     control_packet_t packet;
@@ -241,11 +250,11 @@ server_status_code_t stop()
 
     broadcast_data(&packet, sizeof(control_packet_t));
 
-    SDL_FreeWAV(buffer);
-    length = 0;
-    curr_length = 0;
-    curr_pos = NULL;
-    buffer = NULL;
+    //SDL_FreeWAV(buffer);
+    //length = 0;
+    //curr_length = 0;
+    //curr_pos = NULL;
+    //buffer = NULL;
 
     pthread_mutex_unlock(&packet_lock);
     return SUCCESS;
@@ -266,30 +275,47 @@ server_status_code_t kill_device(char* ip_address)
     
     packet.data.control_code = KILL;
 
+    // do we need to use a lock here to prevent getting null pointer?
+
+    device_t* device = get_device(ip_address);
+    if(device == NULL)
+    {
+        return DEVICE_NOT_CONNECTED;
+    }
+    /*    
     device_t* device = remove_device(ip_address);
     if(device == NULL)
     {
         return DEVICE_NOT_CONNECTED;
     }
+    */
     printf("sending control packet\n");
     // send to just one of the devices
     send_data(device, &packet, sizeof(control_packet_t));
-
-    close(device->sockfd);
+    
+    // do we wait to confirm it was sent
+    // we dont get the kill code coming up ... think this might be doing it
+    // we NEED TO BREAK HE PROBLEM DOWN
+    // we shud first make the kill code print on the client
+    // then break down the problem, and figure out whats not working and what is
+    // how is it that hard to know to do this?
+    // cant really do this right now, need to connect to the pi
+    
+    //close(device->sockfd);
 
     return SUCCESS;
 }
 
 static void broadcast_data(void* buffer, unsigned int size) 
 {
+    pthread_mutex_lock(&tcp_lock);
     int i;
     for(i=0; i<device_list->size; i++)
     {
         device_t* next = list_get(i, device_list);
 
-        pthread_mutex_lock(&tcp_lock);
         int status = write( next->sockfd, buffer, size);
-        pthread_mutex_unlock(&tcp_lock);
+        
         if (status < 0)
         {
             perror("Error writing to socket\n");
@@ -299,6 +325,7 @@ static void broadcast_data(void* buffer, unsigned int size)
             //printf("Great Success!\n");
         }
     }
+    pthread_mutex_unlock(&tcp_lock);
 }
 
 static void send_data(device_t* device, void* buffer, unsigned int size) 
@@ -354,6 +381,20 @@ static device_t* remove_device(char* ip_address)
             device_t* removed_device = list_remove(i, device_list);
             pthread_mutex_unlock(&tcp_lock);
             return removed_device;
+        }
+    }
+    return NULL;
+}
+
+static device_t* get_device(char* ip_address)
+{
+    int i;
+    for(i=0; i<device_list->size; i++)
+    {
+        device_t* next = list_get(i, device_list);
+        if(strcmp(next->ip_address, ip_address) == 0)
+        {
+            return next;
         }
     }
     return NULL;
