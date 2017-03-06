@@ -250,6 +250,8 @@ server_status_code_t stop()
 
     broadcast_data(&packet, sizeof(control_packet_t));
 
+    // why is this commented our, and does our stop work?
+
     //SDL_FreeWAV(buffer);
     //length = 0;
     //curr_length = 0;
@@ -275,21 +277,21 @@ server_status_code_t kill_device(char* ip_address)
     
     packet.data.control_code = KILL;
 
-    // do we need to use a lock here to prevent getting null pointer?
-    
+    /*    
     device_t* device = get_device(ip_address);
     if(device == NULL)
     {
         return DEVICE_NOT_CONNECTED;
     }
+    */
     // REMOVE DEVICE DOES NOT WORK, BUT GET DOES...
-    /*
+    
     device_t* device = remove_device(ip_address);
     if(device == NULL)
     {
         return DEVICE_NOT_CONNECTED;
     }
-    */
+    
     printf("sending control packet\n");
     // send to just one of the devices
     send_data(device, &packet, sizeof(control_packet_t));

@@ -1,8 +1,6 @@
 
 #include "client.h"
 
-// main socket
-static int current_socket_fd;
 // ring buffer to store sound packets
 static ring_buf_t* rbuf;
 // the SDL spec that defines the data we are playing 
@@ -13,6 +11,9 @@ static pthread_t tcp_thread;
 static pthread_mutex_t rbuf_mutex;
 // buffer for reading from tcp socket
 static uint8_t* swap_buf;
+
+int listen_socket;
+int audio_socket;
 
 int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
@@ -25,6 +26,8 @@ int main(int argc, char *argv[]) {
 
     // allocate the tcp swap buffer
     swap_buf = (uint8_t*) malloc(sizeof(uint8_t) * FRAME_SIZE);
+
+    setup_port();
 
     while(1)
     {
@@ -65,16 +68,12 @@ int read_socket(int socketfd, void* buffer, int size)
     return total_read;
 }
 
-void wait_for_connection()
+void setup_port()
 {
-    int sockfd;
-    int newsockfd;
-    int clilen;
     sockaddr_in serv_addr;
-    sockaddr_in cli_addr;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
+    listen_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (listen_socket < 0)
     {
         perror("ERROR opening socket");
     }    
@@ -83,23 +82,26 @@ void wait_for_connection()
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons( PORTNO );
-    if ( bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0 )
+    if ( bind(listen_socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0 )
     {
         perror("ERROR on binding");
     }    
-    listen(sockfd,5);
-    clilen = sizeof(cli_addr);
+    listen(listen_socket,5);
+}
+
+void wait_for_connection()
+{
+    sockaddr_in cli_addr;
+    int clilen = sizeof(cli_addr);
     while(1)
     {
         // pretty sure this blocks which is what we want
-        if ( ( newsockfd = accept( sockfd, (struct sockaddr *) &cli_addr, (socklen_t*) &clilen) ) < 0 )
+        if ( ( audio_socket = accept( listen_socket, (struct sockaddr *) &cli_addr, (socklen_t*) &clilen) ) < 0 )
         {
             perror("ERROR on accept");
         }
         else
         {
-            // get out of the inf while loop
-            current_socket_fd = newsockfd;
             printf("connected!\n");
             break;
         }
@@ -130,7 +132,7 @@ static void* run_tcp_thread(void *data)
 
     while(1)
     {
-        read_socket(current_socket_fd, &packet, sizeof(packet_header_t));
+        read_socket(audio_socket, &packet, sizeof(packet_header_t));
         
         assert(packet.top == PACKET_HEADER_START);
         assert(packet.code == CONTROL || packet.code == AUDIO_DATA);
@@ -138,7 +140,7 @@ static void* run_tcp_thread(void *data)
         
         if(packet.code == CONTROL)
         {
-            read_socket(current_socket_fd, &control_data, sizeof(control_data_t));
+            read_socket(audio_socket, &control_data, sizeof(control_data_t));
             if(control_data.control_code == PLAY)
             {
                 printf("Play!\n");
@@ -188,14 +190,14 @@ static void* run_tcp_thread(void *data)
                 //SDL_CloseAudio();
 #endif
                 clear_buffer(rbuf);
-                close(current_socket_fd);
+                close(audio_socket);
                 // we return here because we want to kill this thread
                 return 0;
             }
         }
         else if(packet.code == AUDIO_DATA)
         {
-            read_socket(current_socket_fd, audio_data, FRAME_SIZE * sizeof(uint8_t));
+            read_socket(audio_socket, audio_data, FRAME_SIZE * sizeof(uint8_t));
             while(isFull(rbuf));
             pthread_mutex_lock(&rbuf_mutex);
             write_buffer(rbuf, audio_data, sizeof(uint8_t) * FRAME_SIZE);
