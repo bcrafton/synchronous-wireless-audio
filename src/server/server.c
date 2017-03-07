@@ -31,11 +31,13 @@ static SDL_AudioSpec spec;
 static pthread_mutex_t tcp_lock;
 static pthread_mutex_t packet_lock;
 
+static int ipaddress_compare(void *i1, void *i2);
+
 server_status_code_t start()
 {
     // if we started a new thread this list shud be NULL.
     assert(device_list == NULL);
-    device_list = list_constructor();
+    device_list = list_constructor(&ipaddress_compare);
 
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
     {
@@ -163,7 +165,7 @@ server_status_code_t set_device(char* ip_address)
     flags &= (~O_NONBLOCK); 
     fcntl(device->sockfd, F_SETFL, flags);
     
-    list_append(device, device_list);
+    list_append(device->ip_address, device, device_list);
     return SUCCESS;
 }
 
@@ -277,15 +279,6 @@ server_status_code_t kill_device(char* ip_address)
     
     packet.data.control_code = KILL;
 
-    /*    
-    device_t* device = get_device(ip_address);
-    if(device == NULL)
-    {
-        return DEVICE_NOT_CONNECTED;
-    }
-    */
-    // REMOVE DEVICE DOES NOT WORK, BUT GET DOES...
-    
     device_t* device = remove_device(ip_address);
     if(device == NULL)
     {
@@ -325,21 +318,15 @@ server_status_code_t kill_device(char* ip_address)
 static void broadcast_data(void* buffer, unsigned int size) 
 {
     pthread_mutex_lock(&tcp_lock);
-    int i;
-    for(i=0; i<device_list->size; i++)
+    Node* next;
+    for(next = device_list->head; next != NULL; next = next->next)
     {
-        device_t* next = list_get(i, device_list);
-
-        int status = write( next->sockfd, buffer, size);
-        
-        if (status < 0)
-        {
-            perror("Error writing to socket\n");
-        }
-        else
-        {
-            //printf("Great Success!\n");
-        }
+      device_t* device = next->value;
+      int status = write(device->sockfd, buffer, size);
+      if (status < 0)
+      {
+          perror("Error writing to socket\n");
+      }
     }
     pthread_mutex_unlock(&tcp_lock);
 }
@@ -373,47 +360,25 @@ static bool has_packets()
 
 static bool contains_device(char* ip_address)
 {
-    int i;
-    for(i=0; i<device_list->size; i++)
-    {
-        device_t* next = list_get(i, device_list);
-        if(strcmp(next->ip_address, ip_address) == 0)
-        {
-            return true;
-        }
-    }
-    return false;
+  return (list_search(ip_address, device_list) != NULL);
 }
 
 static device_t* remove_device(char* ip_address)
 {
-    int i;
-    for(i=0; i<device_list->size; i++)
-    {
-        device_t* next = list_get(i, device_list);
-        if(strcmp(next->ip_address, ip_address) == 0)
-        {
-            pthread_mutex_lock(&tcp_lock);
-            device_t* removed_device = list_remove(i, device_list);
-            pthread_mutex_unlock(&tcp_lock);
-            return removed_device;
-        }
-    }
-    return NULL;
+  pthread_mutex_lock(&tcp_lock);
+  device_t* device = list_remove(ip_address, device_list);
+  pthread_mutex_unlock(&tcp_lock);
+  return device;
 }
 
 static device_t* get_device(char* ip_address)
 {
-    int i;
-    for(i=0; i<device_list->size; i++)
-    {
-        device_t* next = list_get(i, device_list);
-        if(strcmp(next->ip_address, ip_address) == 0)
-        {
-            return next;
-        }
-    }
-    return NULL;
+  return list_search(ip_address, device_list);
+}
+
+static int ipaddress_compare(void *i1, void *i2)
+{
+	return strcmp((char*)i1, (char*)i2);
 }
 
 int main()
