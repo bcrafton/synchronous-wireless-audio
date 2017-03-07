@@ -7,7 +7,8 @@ from Tkinter import *
 from ttk import *
 import ctypes
 
-hard_coded_ip_address = "127.0.0.1"
+#hard_coded_ip_address = "127.0.0.1"
+hard_coded_ip_address = "192.168.0.100"
 
 class Example(Frame):
     def __init__(self, parent):

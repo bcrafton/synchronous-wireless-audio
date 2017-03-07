@@ -254,11 +254,11 @@ server_status_code_t stop()
 
     // why is this commented our, and does our stop work?
 
-    //SDL_FreeWAV(buffer);
-    //length = 0;
-    //curr_length = 0;
-    //curr_pos = NULL;
-    //buffer = NULL;
+    SDL_FreeWAV(buffer);
+    length = 0;
+    curr_length = 0;
+    curr_pos = NULL;
+    buffer = NULL;
 
     pthread_mutex_unlock(&packet_lock);
     return SUCCESS;
