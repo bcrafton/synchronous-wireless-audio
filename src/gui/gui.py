@@ -7,6 +7,8 @@ from Tkinter import *
 from ttk import *
 import ctypes
 
+#hard_coded_ip_address = "127.0.0.1"
+hard_coded_ip_address = "192.168.0.100"
 
 class Example(Frame):
     def __init__(self, parent):
@@ -77,11 +79,20 @@ class Example(Frame):
         set_song_button = Button(self, text="Set Song", command=lambda: self.set_song(song_location.get()))
         set_song_button.pack(side=RIGHT, padx=5, pady=5)
 
+        kill_button = Button(self, text="Kill Device", command=lambda:  self.remove_device(ip_address))
+        kill_button.pack(side=RIGHT, padx=5, pady=5)
+
     def play(self):
-        self.server.play()
+        status = self.server.play()
+        print "play status: " + str(status)
+
+    def remove_device(self, ip_address):
+        status = self.server.kill_device(ctypes.c_char_p(hard_coded_ip_address))
+        print "kill status: " + str(status)
 
     def stop(self):
-        self.server.stop()
+        status = self.server.stop()
+        print "stop status: " + str(status)
 
     def set_song(self, song_path):
         status = self.server.set_song(ctypes.c_char_p(song_path))
@@ -97,12 +108,8 @@ class Example(Frame):
         song_var.set(location)
 
     def add_device(self, ip_address):
-        ip_address = "192.168.0.101"
-        status = self.server.set_device(ctypes.c_char_p(ip_address))
+        status = self.server.set_device(ctypes.c_char_p(hard_coded_ip_address))
         print "set device status: " + str(status)
-        #ip_address = "192.168.0.102"
-        #status = self.server.set_device(ctypes.c_char_p(ip_address))
-        #print "set device status: " + str(status)
     
 
 def main():

@@ -29,6 +29,8 @@
 
 #define PACKET_HEADER_START 0xDEADBEEF
 
+#define LOCAL_HOST_ONLY 0
+
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;

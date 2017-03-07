@@ -6,6 +6,7 @@
 #include "list.h"
 
 #define MUS_PATH "../../sound_files/goat.wav"
+#define IP_ADDRESS_BUFFER_SIZE 20
 
 typedef enum server_status_code{
     SUCCESS = 0,
@@ -15,9 +16,14 @@ typedef enum server_status_code{
     CANNOT_FIND_RPI_ERROR = 4,
     CONNECTION_ERROR = 5,
     TIMEOUT_ERROR = 6,
+    DEVICE_ALREADY_CONNECTED = 7,
+    DEVICE_NOT_CONNECTED = 8,
+    NO_CONNECTED_DEVICES = 9,
+    NO_PACKETS = 10,
 }server_status_code_t;
 
 typedef struct device{
+    char ip_address[IP_ADDRESS_BUFFER_SIZE];
     int sockfd;
     sockaddr_in serv_addr;
 } device_t;
@@ -31,12 +37,13 @@ server_status_code_t set_song(char* filepath);
 
 // TODO: change this to add device.
 server_status_code_t set_device(char* ip_address);
-server_status_code_t remove_device(char* ip_address);
+server_status_code_t kill_device(char* ip_address);
 
 // TODO: change name of play to play_audio, or think of better names for these that dont conflict
 server_status_code_t play();
 server_status_code_t pause_audio();
 // TODO: change name of stop to stop_audio
 server_status_code_t stop();
+
 
 #endif

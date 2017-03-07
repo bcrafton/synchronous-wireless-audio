@@ -22,6 +22,7 @@ bool isFull(ring_buf_t* b);
 bool isEmpty(ring_buf_t* b);
 bool write_buffer(ring_buf_t* b, uint8_t* data, uint32_t size);
 uint8_t* read_buffer(ring_buf_t* b, uint32_t size);
+void clear_buffer(ring_buf_t* b);
 
 // tests
 int test_ring_buf();
