@@ -37,16 +37,16 @@ class Example(Frame):
 
         ips = self.get_ips()
 
-        selections_frame = Frame(self, height=20)
+        selections_frame = Frame(self)
         selections_frame.pack(fill=X)
 
-        ips_frame = Frame(self, height=100, relief=RAISED)
+        ips_frame = Frame(self)
         ips_frame.pack(fill=X)
 
         button_frame = Frame(self, borderwidth=1)
-        button_frame.pack(fill=BOTH, expand=True)
+        button_frame.pack(fill=X)
 
-        self.pack(fill=BOTH, expand=True)
+        self.pack()
 
         song_label = Label(selections_frame, text="Song Location:", width=13)
         song_label.pack(side=LEFT, padx=5, pady=5)
@@ -59,33 +59,32 @@ class Example(Frame):
         song_button.pack(side=RIGHT, padx=5, pady=5)
 
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
-        ips_label.pack(side=LEFT, padx=5, pady=5)
+        ips_label.pack(anchor=NW, padx=5, pady=5)
 
-        ip_list = []
-        check_vars = []
-        ip_address = ""
+        squares = []
+        canvas = Canvas(ips_frame, width=20, height=100)
+        canvas.pack(side=RIGHT)
+        y0 = 0
 
         for ip in ips:
-            var = Tkinter.BooleanVar()
-            c = Checkbutton(ips_frame, text=ip, variable=var)
-            c.pack(padx=5, pady=5)
-            var.set(True)
-            check_vars.append(var)
-            ip_list.append(ip)
+            c = Checkbutton(ips_frame, text=ip, variable=ips[ip], command=lambda: self.update_device(ips, squares, canvas))
+            c.pack(anchor=N)
 
-        close_button = Button(self, text="Close", command=self.quit)
+            y1 = 10 + y0
+            squares.append(canvas.create_rectangle(10, y0, 0, y1, fill="red"))
+
+            y0 += 20
+
+        close_button = Button(button_frame, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
 
-        update_ips_button = Button(self, text="Update IPs", command=lambda: self.add_device(ip_address))
-        update_ips_button.pack(side=RIGHT, padx=5, pady=5)
-
-        stop_button = Button(self, text="Stop", command=lambda: self.stop())
+        stop_button = Button(button_frame, text="Stop", command=lambda: self.stop())
         stop_button.pack(side=RIGHT, padx=5, pady=5)
 
-        play_button = Button(self, text="Play", command=lambda: self.play())
+        play_button = Button(button_frame, text="Play", command=lambda: self.play())
         play_button.pack(side=RIGHT, padx=5, pady=5)
 
-        set_song_button = Button(self, text="Set Song", command=lambda: self.set_song(song_location.get()))
+        set_song_button = Button(button_frame, text="Set Song", command=lambda: self.set_song(song_location.get()))
         set_song_button.pack(side=RIGHT, padx=5, pady=5)
 
     def play(self):
@@ -100,21 +99,43 @@ class Example(Frame):
 
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
-        ips = ["1", "2", "3"]
+        ips = {}
+        for i in range(0, 3):
+            ips[i] = Tkinter.BooleanVar()
+            ips[i].set(True)
         return ips
 
     def set_file_name(self, song_var):
         location = tkFileDialog.askopenfilename(initialdir='../../sound_files')
         song_var.set(location)
 
-    def add_device(self, ip_address):
-        ip_address = "192.168.0.100"
-        status = self.server.set_device(ctypes.c_char_p(ip_address))
-        print "set device status: " + str(status)
-        ip_address = "192.168.0.102"
-        status = self.server.set_device(ctypes.c_char_p(ip_address))
-        print "set device status: " + str(status)
-    
+    def update_device(self, ips, squares, canvas):
+        i = 0
+        for ip in ips:
+            if ips[ip].get():
+                self.update_color(-1, squares[i], canvas)
+                # status = self.server.set_device(ctypes.c_char_p(ip))
+                status = -1
+                self.update_color(status, squares[i], canvas)
+            else:
+                self.update_color(0, squares[i], canvas)
+            i += 1
+
+        # ip_address = "192.168.0.100"
+        # status = self.server.set_device(ctypes.c_char_p(ip_address))
+        # print "set device status: " + str(status)
+        # ip_address = "192.168.0.102"
+        # status = self.server.set_device(ctypes.c_char_p(ip_address))
+        # print "set device status: " + str(status)
+        #
+
+    def update_color(self, status, item, canvas):
+        if status == -1:
+            canvas.itemconfig(item, fill="yellow")
+        elif status == 0:
+            canvas.itemconfig(item, fill="green")
+        else:
+            canvas.itemconfig(item, fill="red")
 
 def main():
     root = Tk()
