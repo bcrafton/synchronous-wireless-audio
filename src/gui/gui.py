@@ -55,9 +55,12 @@ class Example(Frame):
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
         ips_label.pack(side=LEFT, padx=5, pady=5)
 
-        for ip, val in self.ips:
-            c = Checkbutton(ips_frame, text=ip, variable=val)
-            c.pack(padx=5, pady=5)
+        for ip in self.ips:
+		var = Tkinter.BooleanVar()
+            	c = Checkbutton(ips_frame, text=ip, variable=var)
+            	c.pack(padx=5, pady=5)
+		var.set(True)
+		self.ips[ip] = var
 
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
@@ -99,6 +102,7 @@ class Example(Frame):
         for h in nm.all_hosts():
             if 'mac' in nm[h]['addresses'] and 'B8:27:EB' in nm[h]['addresses']['mac'] and 'ipv4' in nm[h]['addresses']:
                 ip_list[nm[h]['addresses']['ipv4']] = True
+	print ip_list
         return ip_list
 
     def set_file_name(self, song_var):
@@ -106,11 +110,12 @@ class Example(Frame):
         song_var.set(location)
 
     def update_devices(self):
-        for ip, val in self.ips:
-            if val is True:
-                status = self.server.set_device(ctypes.c_char_p(ip))
-            else:
-                status = self.server.kill_device(ctypes.c_char_p(ip))
+        for ip in self.ips:
+		print ip, self.ips[ip].get()
+            	if self.ips[ip].get() is True:
+                	status = self.server.set_device(ctypes.c_char_p(ip))
+            	else:
+                	status = self.server.kill_device(ctypes.c_char_p(ip))
         print "set device status: " + str(status)
 
 
