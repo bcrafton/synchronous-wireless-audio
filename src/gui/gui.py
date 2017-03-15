@@ -8,14 +8,16 @@ from ttk import *
 import ctypes
 import nmap
 
-#hard_coded_ip_address = "127.0.0.1"
+# hard_coded_ip_address = "127.0.0.1"
 hard_coded_ip_address = "192.168.0.100"
+
 
 class Example(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
 
         self.parent = parent
+        self.ips = {}
         self.init_ui()
 
         self.server = ctypes.CDLL('../server/server.so')
@@ -27,7 +29,7 @@ class Example(Frame):
         self.style = Style()
         self.style.theme_use("default")
 
-        ips = self.get_ips()
+        self.ips = self.get_ips()
 
         selections_frame = Frame(self, height=20)
         selections_frame.pack(fill=X)
@@ -53,22 +55,14 @@ class Example(Frame):
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
         ips_label.pack(side=LEFT, padx=5, pady=5)
 
-        ip_list = []
-        check_vars = []
-        ip_address = ""
-
-        for ip in ips:
-            var = Tkinter.BooleanVar()
-            c = Checkbutton(ips_frame, text=ip, variable=var)
+        for ip, val in self.ips:
+            c = Checkbutton(ips_frame, text=ip, variable=val)
             c.pack(padx=5, pady=5)
-            var.set(True)
-            check_vars.append(var)
-            ip_list.append(ip)
 
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
 
-        update_ips_button = Button(self, text="Update IPs", command=lambda: self.add_device(ip_address))
+        update_ips_button = Button(self, text="Update IPs", command=lambda: self.update_devices())
         update_ips_button.pack(side=RIGHT, padx=5, pady=5)
 
         stop_button = Button(self, text="Stop", command=lambda: self.stop())
@@ -80,16 +74,9 @@ class Example(Frame):
         set_song_button = Button(self, text="Set Song", command=lambda: self.set_song(song_location.get()))
         set_song_button.pack(side=RIGHT, padx=5, pady=5)
 
-        kill_button = Button(self, text="Kill Device", command=lambda:  self.remove_device(ip_address))
-        kill_button.pack(side=RIGHT, padx=5, pady=5)
-
     def play(self):
         status = self.server.play()
         print "play status: " + str(status)
-
-    def remove_device(self, ip_address):
-        status = self.server.kill_device(ctypes.c_char_p(hard_coded_ip_address))
-        print "kill status: " + str(status)
 
     def stop(self):
         status = self.server.stop()
@@ -101,33 +88,38 @@ class Example(Frame):
 
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
-	print "Finding all connected nodes..."
+        print "Finding all connected nodes..."
         ip = '10.0.0.0/24'
         arguments = '-sP'
 
         nm = nmap.PortScanner()
         nm.scan(ip, arguments=arguments)
 
-        ip_list = []
+        ip_list = {}
         for h in nm.all_hosts():
-            	if 'mac' in nm[h]['addresses'] and 'B8:27:EB' in nm[h]['addresses']['mac'] and 'ipv4' in nm[h]['addresses']:
-                	ip_list.append(nm[h]['addresses']['ipv4'])
+            if 'mac' in nm[h]['addresses'] and 'B8:27:EB' in nm[h]['addresses']['mac'] and 'ipv4' in nm[h]['addresses']:
+                ip_list[nm[h]['addresses']['ipv4']] = True
         return ip_list
 
     def set_file_name(self, song_var):
         location = tkFileDialog.askopenfilename(initialdir='../../sound_files')
         song_var.set(location)
 
-    def add_device(self, ip_address):
-        status = self.server.set_device(ctypes.c_char_p(hard_coded_ip_address))
+    def update_devices(self):
+        for ip, val in self.ips:
+            if val is True:
+                status = self.server.set_device(ctypes.c_char_p(ip))
+            else:
+                status = self.server.kill_device(ctypes.c_char_p(ip))
         print "set device status: " + str(status)
-    
+
 
 def main():
     root = Tk()
     root.geometry("500x170+300+300")
     app = Example(root)
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()
