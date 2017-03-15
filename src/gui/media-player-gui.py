@@ -1,17 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-ZetCode Tkinter tutorial
-
-In this script, we use the pack manager
-to position two buttons in the
-bottom-right corner of the window.
-
-Author: Jan Bodnar
-Last modified: November 2015
-Website: www.zetcode.com
-"""
 import Tkinter
 import tkFileDialog
 from Tkinter import *
