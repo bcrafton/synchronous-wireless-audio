@@ -6,6 +6,7 @@ import tkFileDialog
 from Tkinter import *
 from ttk import *
 import ctypes
+import nmap
 
 #hard_coded_ip_address = "127.0.0.1"
 hard_coded_ip_address = "192.168.0.100"
@@ -100,8 +101,19 @@ class Example(Frame):
 
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
-        ips = ["1", "2", "3"]
-        return ips
+        ip = '10.0.0.0/24'
+        arguments = '-sP'
+
+        nm = nmap.PortScanner()
+        nm.scan(ip, arguments=arguments)
+
+        ip_list = []
+        for h in nm.all_hosts():
+            if 'mac' in nm[h]['addresses'] \
+                    and 'B8:27:EB' in nm[h]['addresses']['mac'] \
+                    and 'ipv4' in nm[h]['addresses']:
+                ip_list.append(nm[h]['addresses']['ipv4'])
+        return ip_list
 
     def set_file_name(self, song_var):
         location = tkFileDialog.askopenfilename(initialdir='../../sound_files')
