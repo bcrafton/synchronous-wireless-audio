@@ -8,9 +8,6 @@ from ttk import *
 import ctypes
 import nmap
 
-# hard_coded_ip_address = "127.0.0.1"
-hard_coded_ip_address = "192.168.0.100"
-
 
 class Example(Frame):
     def __init__(self, parent):
@@ -49,7 +46,7 @@ class Example(Frame):
         song_location = Entry(selections_frame, width=40, textvariable=song_var)
         song_location.pack(side=LEFT, fill=X, pady=5)
 
-        song_button = Button(selections_frame, text="...", width=3, command=lambda: self.set_file_name(song_var))
+        song_button = Button(selections_frame, text="...", width=3, command=lambda: self.set_song_path(song_var))
         song_button.pack(side=RIGHT, padx=5, pady=5)
 
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
@@ -74,8 +71,6 @@ class Example(Frame):
         play_button = Button(self, text="Play", command=lambda: self.play())
         play_button.pack(side=RIGHT, padx=5, pady=5)
 
-        set_song_button = Button(self, text="Set Song", command=lambda: self.set_song(song_location.get()))
-        set_song_button.pack(side=RIGHT, padx=5, pady=5)
 
     def play(self):
         status = self.server.play()
@@ -84,10 +79,6 @@ class Example(Frame):
     def stop(self):
         status = self.server.stop()
         print "stop status: " + str(status)
-
-    def set_song(self, song_path):
-        status = self.server.set_song(ctypes.c_char_p(song_path))
-        print "set song status: " + str(status)
 
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
@@ -105,9 +96,11 @@ class Example(Frame):
 	print ip_list
         return ip_list
 
-    def set_file_name(self, song_var):
+    def set_song_path(self, song_var):
         location = tkFileDialog.askopenfilename(initialdir='../../sound_files')
         song_var.set(location)
+	status = self.server.set_song(ctypes.c_char_p(location))
+        print "set song status: " + str(status)
 
     def update_devices(self):
         for ip in self.ips:
