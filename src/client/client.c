@@ -178,6 +178,7 @@ static void* run_tcp_thread(void *data)
             {
                 printf("Stop!\n");
 #if(!LOCAL_HOST_ONLY)
+                SDL_PauseAudio(1);
                 SDL_CloseAudio();
 #endif
                 clear_buffer(rbuf);
@@ -186,8 +187,8 @@ static void* run_tcp_thread(void *data)
             {
                 printf("Kill!\n");
 #if(!LOCAL_HOST_ONLY)
-                //SDL_PauseAudio(1);
-                //SDL_CloseAudio();
+                SDL_PauseAudio(1);
+                SDL_CloseAudio();
 #endif
                 clear_buffer(rbuf);
                 close(audio_socket);
