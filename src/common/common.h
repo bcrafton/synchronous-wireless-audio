@@ -81,6 +81,29 @@ typedef struct sdl_audio_spec{
     uint8_t channels;
 } sdl_audio_spec_t;
 
+/*
+this is the better way of doing what we want to do
+
+allows one to extend the original control packet for different control types
+rather than having one control packet for all the controls and being bloated.
+
+typedef struct play_config{
+    sdl_audio_spec_t spec;
+    uint64_t time;
+    uint32_t packet_number;
+} play_config_t;
+
+typedef struct play_control_packet{
+    control_packet_t packet;
+    play_config_t;
+} play_control_packet_t;
+
+typedef struct control_packet{
+    packet_header_t header;
+    control_code_t control_code;
+} control_packet_t;
+*/
+
 typedef struct control_data{
     control_code_t control_code;
     sdl_audio_spec_t spec;
