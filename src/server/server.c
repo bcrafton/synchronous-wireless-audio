@@ -64,17 +64,17 @@ static void *run(void* user_data)
     packet->header.top = PACKET_HEADER_START;
     packet->header.size = FRAME_SIZE * sizeof(uint8_t);
     packet->header.code = AUDIO_DATA;
-    
+
     while(1)
     {
-        // probably going to need a lock instead of this static bool for play.
-        // should not be able to stop a song immediatly ... they need to share a lock.
         pthread_mutex_lock(&packet_lock);
-        //printf("%d %d %d\n", has_packets(), has_devices(), curr_length);
+
         if(has_packets() && has_devices())
         {
-            // this isnt really necessary.
-            memcpy(packet->audio_data, curr_pos, FRAME_SIZE);
+            packet->frame.id = (uint32_t) curr_pos;
+            packet->frame.time = 0;
+
+            memcpy(packet->frame.audio_data, curr_pos, FRAME_SIZE);
 
             broadcast_data(packet, packet_size);
 
@@ -288,28 +288,7 @@ server_status_code_t kill_device(char* ip_address)
     printf("sending control packet\n");
     // send to just one of the devices
     send_data(device, &packet, sizeof(control_packet_t));
-    /*
-    struct linger so_linger;
-    so_linger.l_onoff = 1;
-    so_linger.l_linger = 30;
-    int z = setsockopt(device->sockfd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
-    if(z)
-    {
-        perror("error");
-    }
-    */
-    // do we wait to confirm it was sent
-    // we dont get the kill code coming up ... think this might be doing it
-    // we NEED TO BREAK HE PROBLEM DOWN
-    // we shud first make the kill code print on the client
-    // then break down the problem, and figure out whats not working and what is
-    // how is it that hard to know to do this?
-    // cant really do this right now, need to connect to the pi
-    
-    // trying to put in a hack to make this thing work ...
-    // dont want sleep for real.
 
-    //sleep(1);
     close(device->sockfd);
 
     return SUCCESS;

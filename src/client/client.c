@@ -127,7 +127,10 @@ void callback(void *userdata, Uint8 *stream, int len)
 static void* run_tcp_thread(void *data)
 {
     packet_header_t packet;
-    uint8_t* audio_data = (uint8_t*) malloc(FRAME_SIZE * sizeof(uint8_t));
+
+    uint32_t audio_frame_size = sizeof(audio_frame_t) + FRAME_SIZE * sizeof(uint8_t);
+    audio_frame_t* audio_frame = (audio_frame_t*) malloc(audio_frame_size);
+    
     control_data_t control_data;
 
     while(1)
@@ -197,10 +200,11 @@ static void* run_tcp_thread(void *data)
         }
         else if(packet.code == AUDIO_DATA)
         {
-            read_socket(audio_socket, audio_data, FRAME_SIZE * sizeof(uint8_t));
+            read_socket(audio_socket, audio_frame, audio_frame_size);
+            // stall until its not full.
             while(isFull(rbuf));
             pthread_mutex_lock(&rbuf_mutex);
-            write_buffer(rbuf, audio_data, sizeof(uint8_t) * FRAME_SIZE);
+            write_buffer(rbuf, audio_frame->audio_data, sizeof(uint8_t) * FRAME_SIZE);
             pthread_mutex_unlock(&rbuf_mutex);
         }
     }

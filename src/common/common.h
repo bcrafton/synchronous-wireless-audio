@@ -94,10 +94,16 @@ typedef struct control_packet{
 //////////////////////////////////
 //////////////////////////////////
 
+typedef struct audio_frame{
+  uint32_t id;
+  uint64_t time;
+  // this is a c trick if you dont understand and want to, ask Brian Crafton
+  uint8_t audio_data[];
+} audio_frame_t;
+
 typedef struct audio_data_packet{
     packet_header_t header;
-    // this is a c trick if you dont understand and want to, ask Brian Crafton
-    uint8_t audio_data[];
+    audio_frame_t frame;
 } audio_data_packet_t;
 
 #endif
