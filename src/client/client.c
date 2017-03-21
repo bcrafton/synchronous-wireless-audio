@@ -150,6 +150,11 @@ static void* run_tcp_thread(void *data)
                 // could probably use a status thing here so we dont 
                 // have to just close it everytime ... or at all
                 // SDL_AudioClosed() ???
+
+                struct timespec t;
+                clock_gettime(CLOCK_REALTIME, &t);
+                uint64_t time = t.tv_nsec;
+                printf("%lu %lu %d\n", time, control_data.time, control_data.packet_number);
                 
 #if(!LOCAL_HOST_ONLY)
                 SDL_CloseAudio();

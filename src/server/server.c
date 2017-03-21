@@ -71,6 +71,8 @@ static void *run(void* user_data)
 
         if(has_packets() && has_devices())
         {
+            // you can do this here because it is in sync with current position
+            // cannot do this on play however.
             packet->frame.id = (uint32_t) curr_pos;
             packet->frame.time = 0;
 
@@ -193,6 +195,15 @@ server_status_code_t play()
     packet.data.spec.freq = spec.freq;
     packet.data.spec.format = spec.format;    
     packet.data.spec.channels = spec.channels;
+
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    packet.data.time = t.tv_nsec + NANOSEC_IN_SEC;
+
+    // cannot use "curr_pos" because play is not in sync with the packets being sent
+    // start with 0, other than that will need feedback from clients.
+    // like get all the last frames back, and choose the largest one.
+    packet.data.packet_number = 0;
 
     broadcast_data(&packet, sizeof(control_packet_t));
 
