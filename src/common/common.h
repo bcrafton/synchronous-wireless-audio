@@ -109,7 +109,7 @@ typedef struct control_packet{
 } control_packet_t;
 */
 
-typedef struct control_data{
+typedef struct __attribute__((__packed__)) control_data{
     control_code_t control_code;
     sdl_audio_spec_t spec;
     // https://www.cs.rutgers.edu/~pxk/416/notes/c-tutorials/gettime.html

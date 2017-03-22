@@ -35,6 +35,8 @@ static int ipaddress_compare(void *i1, void *i2);
 
 server_status_code_t start()
 {
+    //printf("%d %d %d\n", sizeof(control_packet_t), sizeof(control_data_t), sizeof(packet_header_t));
+
     // if we started a new thread this list shud be NULL.
     assert(device_list == NULL);
     device_list = list_constructor(&ipaddress_compare);
