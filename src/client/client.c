@@ -139,7 +139,7 @@ static void* run_tcp_thread(void *data)
         
         assert(packet.top == PACKET_HEADER_START);
         assert(packet.code == CONTROL || packet.code == AUDIO_DATA);
-        assert(packet.size == sizeof(control_data_t) || packet.size == FRAME_SIZE);
+        assert(packet.size == sizeof(control_data_t) || packet.size == FRAME_SIZE + sizeof(audio_frame_t));
         
         if(packet.code == CONTROL)
         {
