@@ -126,7 +126,7 @@ typedef struct control_packet{
 //////////////////////////////////
 //////////////////////////////////
 
-typedef struct audio_frame{
+typedef struct __attribute__((__packed__)) audio_frame{
   uint32_t id;
   uint64_t time;
   // this is a c trick if you dont understand and want to, ask Brian Crafton
