@@ -113,7 +113,9 @@ typedef struct __attribute__((__packed__)) control_data{
     control_code_t control_code;
     sdl_audio_spec_t spec;
     // https://www.cs.rutgers.edu/~pxk/416/notes/c-tutorials/gettime.html
-    uint64_t time;
+    uint32_t sec;
+    uint32_t nsec;
+    uint32_t offset;
     uint32_t packet_number;
 } control_data_t;
 
@@ -128,7 +130,8 @@ typedef struct control_packet{
 
 typedef struct __attribute__((__packed__)) audio_frame{
   uint32_t id;
-  uint64_t time;
+  uint32_t sec;
+  uint32_t nsec;
   // this is a c trick if you dont understand and want to, ask Brian Crafton
   uint8_t audio_data[];
 } audio_frame_t;

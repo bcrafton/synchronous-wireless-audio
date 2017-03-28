@@ -75,7 +75,8 @@ static void *run(void* user_data)
             // you can do this here because it is in sync with current position
             // cannot do this on play however.
             packet->frame.id = (uint32_t) curr_pos;
-            packet->frame.time = 0;
+            packet->frame.sec = 0;
+            packet->frame.nsec = 0;
 
             memcpy(packet->frame.audio_data, curr_pos, FRAME_SIZE);
 
@@ -199,7 +200,11 @@ server_status_code_t play()
 
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
-    packet.data.time = t.tv_nsec + NANOSEC_IN_SEC;
+    packet.data.sec = t.tv_sec;
+    packet.data.nsec = t.tv_nsec;
+    packet.data.offset = NANOSEC_IN_SEC;
+
+    printf("%d %d %lu %lu\n", packet.data.sec, packet.data.nsec, t.tv_nsec, t.tv_sec);
 
     // cannot use "curr_pos" because play is not in sync with the packets being sent
     // start with 0, other than that will need feedback from clients.
