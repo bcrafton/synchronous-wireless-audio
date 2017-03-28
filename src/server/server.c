@@ -204,7 +204,7 @@ server_status_code_t play()
     packet.data.nsec = t.tv_nsec;
     packet.data.offset = NANOSEC_IN_SEC;
 
-    printf("%d %d %lu %lu\n", packet.data.sec, packet.data.nsec, t.tv_nsec, t.tv_sec);
+    printf("%lu %d %lu %d\n", t.tv_sec, packet.data.sec, t.tv_nsec, packet.data.nsec);
 
     // cannot use "curr_pos" because play is not in sync with the packets being sent
     // start with 0, other than that will need feedback from clients.
