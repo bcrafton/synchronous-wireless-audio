@@ -154,7 +154,7 @@ static void* run_tcp_thread(void *data)
                 struct timespec t;
                 clock_gettime(CLOCK_REALTIME, &t);
                 uint64_t time = t.tv_nsec;
-                printf("%lu %lu %d\n", time, control_data.time, control_data.packet_number);
+                printf("%d %d %d %d\n", t.tv_sec, control_data.sec, t.tv_nsec, control_data.nsec);
                 
 #if(!LOCAL_HOST_ONLY)
                 SDL_CloseAudio();
