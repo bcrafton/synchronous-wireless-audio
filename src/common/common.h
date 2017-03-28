@@ -38,17 +38,10 @@
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
-//typedef unsigned long uint64_t;
-
-/*
-typedef char int8_t;
-typedef short int16_t;
-typedef int int32_t;
-typedef long int64_t;
-*/
+// WE CANNOT USE LONGS, IT IS TOO TRICKY TO WORK BETWEEN PI AND 64 BIT MACHINE BECAUSE THE PI IS 32 BITS
+//typedef unsigned long uint64_t; // this is illegal now
 
 typedef struct sockaddr_in sockaddr_in;
-
 
 //////////////////////////////////
 //////////////////////////////////
@@ -94,7 +87,7 @@ typedef struct sdl_audio_spec{
 /*
 typedef struct play_config{
     sdl_audio_spec_t spec;
-    uint64_t time;
+    uint64_t time; // this is illegal now
     uint32_t packet_number;
 } play_config_t;
 
