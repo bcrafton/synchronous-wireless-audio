@@ -27,11 +27,12 @@ class Example(Frame):
         self.style.theme_use("default")
 
         self.ips = self.get_ips()
+        self.squares = []
 
         selections_frame = Frame(self, height=20)
         selections_frame.pack(fill=X)
 
-        ips_frame = Frame(self, height=100, relief=RAISED)
+        ips_frame = Frame(self, height=100)
         ips_frame.pack(fill=X)
 
         button_frame = Frame(self, borderwidth=1)
@@ -52,12 +53,21 @@ class Example(Frame):
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
         ips_label.pack(side=LEFT, padx=5, pady=5)
 
+        self.canvas = Canvas(ips_frame, width=20, height=100)
+        self.canvas.pack(side=RIGHT)
+        y0 = 0
+
         for ip in self.ips:
-		var = Tkinter.BooleanVar()
-            	c = Checkbutton(ips_frame, text=ip, variable=var)
-            	c.pack(padx=5, pady=5)
-		var.set(True)
-		self.ips[ip] = var
+            var = Tkinter.BooleanVar()
+            c = Checkbutton(ips_frame, text=ip, variable=var,
+                            command=lambda: self.update_devices())
+            c.pack(anchor=N)
+            var.set(True)
+            self.ips[ip] = var
+
+            y1 = 10 + y0
+            self.squares.append(self.canvas.create_rectangle(10, y0, 0, y1, fill="red"))
+            y0 += 20
 
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
@@ -70,7 +80,6 @@ class Example(Frame):
 
         play_button = Button(self, text="Play", command=lambda: self.play())
         play_button.pack(side=RIGHT, padx=5, pady=5)
-
 
     def play(self):
         status = self.server.play()
@@ -93,23 +102,38 @@ class Example(Frame):
         for h in nm.all_hosts():
             if 'mac' in nm[h]['addresses'] and 'B8:27:EB' in nm[h]['addresses']['mac'] and 'ipv4' in nm[h]['addresses']:
                 ip_list[nm[h]['addresses']['ipv4']] = True
-	print ip_list
+        print ip_list
+        ip_list["blah blah blah"] = 1
+        ip_list["blah blah boo"] = 1
         return ip_list
 
     def set_song_path(self, song_var):
         location = tkFileDialog.askopenfilename(initialdir='../../sound_files')
         song_var.set(location)
-	status = self.server.set_song(ctypes.c_char_p(location))
+        status = self.server.set_song(ctypes.c_char_p(location))
         print "set song status: " + str(status)
 
     def update_devices(self):
+        i = 0
         for ip in self.ips:
-		print ip, self.ips[ip].get()
-            	if self.ips[ip].get() is True:
-                	status = self.server.set_device(ctypes.c_char_p(ip))
-            	else:
-                	status = self.server.kill_device(ctypes.c_char_p(ip))
-        print "set device status: " + str(status)
+            print ip, self.ips[ip].get()
+            if self.ips[ip].get() is True:
+                self.update_color(-1, self.squares[i])
+                status = self.server.set_device(ctypes.c_char_p(ip))
+            else:
+                self.update_color(-1, self.squares[i])
+                status = self.server.kill_device(ctypes.c_char_p(ip))
+            self.update_color(status, self.squares[i])
+            print "set device status: " + str(status)
+            i += 1
+
+    def update_color(self, status, item):
+        if status == -1:
+            self.canvas.itemconfig(item, fill="yellow")
+        elif status == 0:
+            self.canvas.itemconfig(item, fill="green")
+        else:
+            self.canvas.itemconfig(item, fill="red")
 
 
 def main():
