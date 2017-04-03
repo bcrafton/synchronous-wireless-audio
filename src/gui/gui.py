@@ -59,8 +59,7 @@ class Example(Frame):
 
         for ip in self.ips:
             var = Tkinter.BooleanVar()
-            c = Checkbutton(ips_frame, text=ip, variable=var,
-                            command=lambda: self.update_devices())
+            c = Checkbutton(ips_frame, text=ip, variable=var)
             c.pack(anchor=N)
             var.set(True)
             self.ips[ip] = var
@@ -103,8 +102,6 @@ class Example(Frame):
             if 'mac' in nm[h]['addresses'] and 'B8:27:EB' in nm[h]['addresses']['mac'] and 'ipv4' in nm[h]['addresses']:
                 ip_list[nm[h]['addresses']['ipv4']] = True
         print ip_list
-        ip_list["blah blah blah"] = 1
-        ip_list["blah blah boo"] = 1
         return ip_list
 
     def set_song_path(self, song_var):
@@ -115,6 +112,9 @@ class Example(Frame):
 
     def update_devices(self):
         i = 0
+
+        #
+
         for ip in self.ips:
             print ip, self.ips[ip].get()
             if self.ips[ip].get() is True:
