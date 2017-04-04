@@ -153,7 +153,15 @@ static void* run_tcp_thread(void *data)
 
                 struct timespec t;
                 clock_gettime(CLOCK_REALTIME, &t);
-                printf("%d %d %d %d\n", t.tv_sec, control_data.sec, t.tv_nsec, control_data.nsec);
+
+		// arbitrarily setting target time to be 7s after server "play" signal time
+		control_data.sec = control_data.sec + 7;
+
+		// print out pi's system time and target time
+                printf("server sec  : %d\n", t.tv_sec);
+		printf("target sec  : %d\n", control_data.sec);
+		printf("server nsec : %d\n", t.tv_nsec);
+		printf("cue nsec    : %d\n", control_data.nsec);
                 
 #if(!LOCAL_HOST_ONLY)
                 SDL_CloseAudio();
@@ -170,8 +178,17 @@ static void* run_tcp_thread(void *data)
                 {
                     fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
                     exit(-1);
-	            }
-                SDL_PauseAudio(0);
+	        }
+	
+		uint32_t target_sec;
+
+		// spin while we wait for cue time
+		do {
+			clock_gettime(CLOCK_REALTIME, &t);
+			target_sec = (uint32_t) t.tv_sec;
+		} while (target_sec != control_data.sec);
+                
+		SDL_PauseAudio(0);
 #endif
             }
             else if(control_data.control_code == PAUSE)
