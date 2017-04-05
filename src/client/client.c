@@ -192,15 +192,15 @@ static void* run_tcp_thread(void *data)
 
         sec_offset = control_data.sec - curr_pi_time.tv_sec;
 
-        if (curr_pi_time.nsec > control_data.nsec)
+        if (curr_pi_time.tv_nsec > control_data.nsec)
         {
             sec_offset--;
-            nsec_offset = NANOSEC_IN_SEC - curr_pi_time.nsec + control_data.nsec;
+            nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + control_data.nsec;
         } else
         {
-            nsec_offset = control_data.nsec - curr_pi_time.nsec;
+            nsec_offset = control_data.nsec - curr_pi_time.tv_nsec;
         }
-        
+
         usec_offset = nsec_offset / 1000;
 
         timer.it_value.tv_sec = sec_offset;
