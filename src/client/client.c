@@ -180,7 +180,7 @@ static void* run_tcp_thread(void *data)
         sa.sa_handler = &timer_handler;
         sigaction (SIGALRM, &sa, NULL);
 
-        struct timespec t;
+        struct timespec curr_pi_time;
         uint32_t sec_offset;
         uint32_t usec_offset;
         uint32_t nsec_offset;
@@ -188,16 +188,20 @@ static void* run_tcp_thread(void *data)
         // arbitrarily setting target time to be 7s after server "play" signal time
         control_data.sec = control_data.sec + 7;
 
-        clock_gettime(CLOCK_REALTIME, &t);
+        clock_gettime(CLOCK_REALTIME, &curr_pi_time);
 
-        sec_offset = control_data.sec - t.tv_sec;
+        sec_offset = control_data.sec - curr_pi_time.tv_sec;
 
-        if (control_data.nsec > 0)
+        if (curr_pi_time.nsec > control_data.nsec)
         {
             sec_offset--;
-            nsec_offset = NANOSEC_IN_SEC - control_data.nsec;
-            usec_offset = nsec_offset / 1000;
+            nsec_offset = NANOSEC_IN_SEC - curr_pi_time.nsec + control_data.nsec;
+        } else
+        {
+            nsec_offset = control_data.nsec - curr_pi_time.nsec;
         }
+        
+        usec_offset = nsec_offset / 1000;
 
         timer.it_value.tv_sec = sec_offset;
         timer.it_value.tv_usec = usec_offset;
@@ -207,9 +211,9 @@ static void* run_tcp_thread(void *data)
         setitimer (ITIMER_REAL, &timer, NULL);
         
         // print out pi's system time and target time
-        printf("pi sec                : %d\n", t.tv_sec);
+        printf("pi sec                : %d\n", curr_pi_time.tv_sec);
         printf("target/server +7 sec  : %d\n", control_data.sec);
-        printf("pi nsec               : %d\n", t.tv_nsec);
+        printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
         printf("target/server nsec    : %d\n", control_data.nsec);
         printf("sec_offset            : %d\n", sec_offset);
         printf("usec_offset           : %d\n", usec_offset);
