@@ -25,6 +25,8 @@
 #include <SDL2/SDL.h>
 
 #include <time.h>
+#include <sys/time.h>
+#include <signal.h>
 
 #define NANOSEC_IN_SEC 1000000000L
 

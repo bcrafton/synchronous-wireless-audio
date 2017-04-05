@@ -124,6 +124,11 @@ void callback(void *userdata, Uint8 *stream, int len)
     SDL_memcpy(stream, data, len);
 }
 
+void timer_handler (int signum)
+{
+    SDL_PauseAudio(0);
+}
+
 static void* run_tcp_thread(void *data)
 {
     packet_header_t packet;
@@ -164,31 +169,47 @@ static void* run_tcp_thread(void *data)
 		printf("target/server nsec    : %d\n", control_data.nsec);
                 
 #if(!LOCAL_HOST_ONLY)
-                SDL_CloseAudio();
+        SDL_CloseAudio();
 
-                spec.freq = control_data.spec.freq;
-                spec.format = control_data.spec.format;
-                spec.channels = control_data.spec.channels;
-                uint8_t sample_size = spec.format & 0xFF;
-                spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
-                spec.callback = callback;
-                spec.userdata = NULL;
-                
-                if ( SDL_OpenAudio(&spec, NULL) < 0 )
-                {
-                    fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-                    exit(-1);
-	            }
-	
-		uint32_t target_sec;
+        spec.freq = control_data.spec.freq;
+        spec.format = control_data.spec.format;
+        spec.channels = control_data.spec.channels;
+        uint8_t sample_size = spec.format & 0xFF;
+        spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
+        spec.callback = callback;
+        spec.userdata = NULL;
+        
+        if ( SDL_OpenAudio(&spec, NULL) < 0 )
+        {
+            fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+            exit(-1);
+        }
 
-		// spin while we wait for cue time
-		do {
-			clock_gettime(CLOCK_REALTIME, &t);
-			target_sec = (uint32_t) t.tv_sec;
-		} while (target_sec != control_data.sec);
+        struct sigaction sa;
+        struct itimerval timer;
+
+        memset (&sa, 0, sizeof (sa));
+        sa.sa_handler = &timer_handler;
+        sigaction (SIGALRM, &sa, NULL);
+
+        timer.it_value.tv_sec = 7;
+        timer.it_value.tv_usec = 0;
+        timer.it_interval.tv_sec = 0;
+        timer.it_interval.tv_usec = 0;
+
+        setitimer (ITIMER_REAL, &timer, NULL);
+
+        /*
+        uint32_t target_sec;
+
+        // spin while we wait for cue time
+        do {
+	        clock_gettime(CLOCK_REALTIME, &t);
+	        target_sec = (uint32_t) t.tv_sec;
+        } while (target_sec != control_data.sec);
                 
-		SDL_PauseAudio(0);
+        SDL_PauseAudio(0);
+        */
 #endif
             }
             else if(control_data.control_code == PAUSE)
