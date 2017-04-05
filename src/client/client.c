@@ -202,6 +202,15 @@ static void* run_tcp_thread(void *data)
         }
 
         usec_offset = nsec_offset / 1000;
+/*
+	if (usec_offset > 250000)
+	{
+		usec_offset = usec_offset - 250000;
+	} else {
+		sec_offset = sec_offset - 1;
+		usec_offset += 750000;
+	}
+*/
 
         timer.it_value.tv_sec = sec_offset;
         timer.it_value.tv_usec = usec_offset;
