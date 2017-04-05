@@ -192,8 +192,21 @@ static void* run_tcp_thread(void *data)
         sa.sa_handler = &timer_handler;
         sigaction (SIGALRM, &sa, NULL);
 
-        timer.it_value.tv_sec = 7;
-        timer.it_value.tv_usec = 0;
+        uint32_t sec_offset;
+        uint32_t usec_offset;
+        uint32_t nsec_offset;
+        clock_gettime(CLOCK_REALTIME, &t);
+        sec_offset = control_data.sec - t.tv_sec;
+
+        if (control_data.nsec > 0)
+        {
+            sec_offset--;
+            nsec_offset = NANOSEC_IN_SEC - control_data.nsec;
+            usec_offset = nsec_offset / 1000;
+        }
+
+        timer.it_value.tv_sec = sec_offset;
+        timer.it_value.tv_usec = usec_offset;
         timer.it_interval.tv_sec = 0;
         timer.it_interval.tv_usec = 0;
 
