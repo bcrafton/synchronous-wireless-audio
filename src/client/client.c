@@ -158,10 +158,10 @@ static void* run_tcp_thread(void *data)
 		control_data.sec = control_data.sec + 7;
 
 		// print out pi's system time and target time
-                printf("server sec  : %d\n", t.tv_sec);
-		printf("target sec  : %d\n", control_data.sec);
-		printf("server nsec : %d\n", t.tv_nsec);
-		printf("cue nsec    : %d\n", control_data.nsec);
+        printf("pi sec                : %d\n", t.tv_sec);
+		printf("target/server +7 sec  : %d\n", control_data.sec);
+		printf("pi nsec               : %d\n", t.tv_nsec);
+		printf("target/server nsec    : %d\n", control_data.nsec);
                 
 #if(!LOCAL_HOST_ONLY)
                 SDL_CloseAudio();
@@ -178,7 +178,7 @@ static void* run_tcp_thread(void *data)
                 {
                     fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
                     exit(-1);
-	        }
+	            }
 	
 		uint32_t target_sec;
 
