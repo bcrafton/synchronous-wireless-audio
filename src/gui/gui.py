@@ -26,6 +26,11 @@ class Example(Frame):
         self.style = Style()
         self.style.theme_use("default")
 
+	if len(sys.argv[1:]) > 0:
+		self.network_ip = sys.argv[1:][0]
+	else:
+		self.network_ip = '192.168.0.0/24'
+
         self.ips = self.get_ips()
         self.squares = []
 
@@ -70,6 +75,9 @@ class Example(Frame):
 
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
+	
+	rescan_pis_button = Button(self, text="Rescan Network", command=lambda: self.get_ips())
+        rescan_pis_button.pack(side=RIGHT, padx=5, pady=5)
 
         update_ips_button = Button(self, text="Update IPs", command=lambda: self.update_devices())
         update_ips_button.pack(side=RIGHT, padx=5, pady=5)
@@ -91,7 +99,7 @@ class Example(Frame):
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
         print "Finding all connected nodes..."
-        ip = '10.0.0.0/24'
+        ip = self.network_ip
         arguments = '-sP'
 
         nm = nmap.PortScanner()
@@ -112,8 +120,6 @@ class Example(Frame):
 
     def update_devices(self):
         i = 0
-
-        #
 
         for ip in self.ips:
             print ip, self.ips[ip].get()
