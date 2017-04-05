@@ -155,18 +155,6 @@ static void* run_tcp_thread(void *data)
                 // could probably use a status thing here so we dont 
                 // have to just close it everytime ... or at all
                 // SDL_AudioClosed() ???
-
-                struct timespec t;
-                clock_gettime(CLOCK_REALTIME, &t);
-
-		// arbitrarily setting target time to be 7s after server "play" signal time
-		control_data.sec = control_data.sec + 7;
-
-		// print out pi's system time and target time
-        printf("pi sec                : %d\n", t.tv_sec);
-		printf("target/server +7 sec  : %d\n", control_data.sec);
-		printf("pi nsec               : %d\n", t.tv_nsec);
-		printf("target/server nsec    : %d\n", control_data.nsec);
                 
 #if(!LOCAL_HOST_ONLY)
         SDL_CloseAudio();
@@ -192,10 +180,16 @@ static void* run_tcp_thread(void *data)
         sa.sa_handler = &timer_handler;
         sigaction (SIGALRM, &sa, NULL);
 
+        struct timespec t;
         uint32_t sec_offset;
         uint32_t usec_offset;
         uint32_t nsec_offset;
+
+        // arbitrarily setting target time to be 7s after server "play" signal time
+        control_data.sec = control_data.sec + 7;
+
         clock_gettime(CLOCK_REALTIME, &t);
+
         sec_offset = control_data.sec - t.tv_sec;
 
         if (control_data.nsec > 0)
@@ -211,6 +205,14 @@ static void* run_tcp_thread(void *data)
         timer.it_interval.tv_usec = 0;
 
         setitimer (ITIMER_REAL, &timer, NULL);
+        
+        // print out pi's system time and target time
+        printf("pi sec                : %d\n", t.tv_sec);
+        printf("target/server +7 sec  : %d\n", control_data.sec);
+        printf("pi nsec               : %d\n", t.tv_nsec);
+        printf("target/server nsec    : %d\n", control_data.nsec);
+        printf("sec_offset            : %d\n", sec_offset);
+        printf("usec_offset           : %d\n", usec_offset);
 
         /*
         uint32_t target_sec;
