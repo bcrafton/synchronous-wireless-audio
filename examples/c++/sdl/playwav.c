@@ -7,9 +7,6 @@
 
 #define NANOSEC_IN_SEC 1000000000L
 
-// arbitrary value for audio playback time
-#define EPOCH_START_SECONDS 1491504900
-
 #define MUS_PATH "../../../sound_files/goat.wav"
 
 // prototype for our audio callback
@@ -78,16 +75,9 @@ int main(int argc, char* argv[]){
     sa.sa_handler = &timer_handler;
     sigaction (SIGALRM, &sa, NULL);
 
-    // the target time that we want audio playback to begin
-    struct timespec target_time;
-
-    // hardcode an arbitrary future time to start playback
-    target_time.tv_sec = EPOCH_START_SECONDS;
-    target_time.tv_nsec = 0;
-
-    // create a buffer so the user can see the target time
+    // create a buffer so the user can see times of interest
     char time_string[26];
-    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(target_time.tv_sec)));
+    uint32_t offset;
 
     struct timespec curr_pi_time;
     uint32_t sec_offset;
@@ -96,6 +86,19 @@ int main(int argc, char* argv[]){
 
     // get the current time on the pi
     clock_gettime(CLOCK_REALTIME, &curr_pi_time);
+
+    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(curr_pi_time.tv_sec)));
+
+    printf("Current time is: [ %s ]. Please enter offset in seconds: \n", time_string);
+    // have the user input the offset in seconds to start playback
+    scanf("%s", &offset);
+
+    // the target time that we want audio playback to begin
+    struct timespec target_time;
+
+    // hardcode an arbitrary future time to start playback
+    target_time.tv_sec = curr_pi_time.tv_sec + offset;
+    target_time.tv_nsec = 0;
 
     sec_offset = target_time.tv_sec - curr_pi_time.tv_sec;
 
@@ -116,7 +119,9 @@ int main(int argc, char* argv[]){
     timer.it_interval.tv_usec = 0;
 
     setitimer (ITIMER_REAL, &timer, NULL);
-    
+
+    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(target_time.tv_sec)));
+
     // print out pi's system time and target time
     printf("Playback should begin at: %s\n\n", time_string);
 
