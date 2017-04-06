@@ -1,10 +1,22 @@
 #include <SDL2/SDL.h>
+#include <signal.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
+
+#define NANOSEC_IN_SEC 1000000000L
 
 #define MUS_PATH "../../../sound_files/goat.wav"
 
 // prototype for our audio callback
 // see the implementation for more information
 void my_audio_callback(void *userdata, Uint8 *stream, int len);
+
+// timer callback function
+void timer_handler (int signum) {
+	SDL_PauseAudio(0);
+}
 
 // variable declarations
 static Uint8 *audio_pos; // global pointer to the audio buffer to be played
@@ -52,8 +64,67 @@ int main(int argc, char* argv[]){
 		exit(-1);
 	}
 	
-	/* Start playing */
-	SDL_PauseAudio(0);
+	// Start playing
+	//SDL_PauseAudio(0); <-- removing in favor of timer logic
+
+	// BEGIN timer logic
+	struct sigaction sa;
+    struct itimerval timer;
+
+    memset (&sa, 0, sizeof (sa));
+    sa.sa_handler = &timer_handler;
+    sigaction (SIGALRM, &sa, NULL);
+
+    // the target time that we want audio playback to begin
+    struct timespec target_time;
+
+    // hardcode an arbitrary future time to start playback
+    target_time.tv_sec = 1491504109;
+    target_time.tv_nsec = 0;
+
+    // create a buffer so the user can see the target time
+    char time_string[26];
+    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(target_time.tv_sec)));
+
+    struct timespec curr_pi_time;
+    uint32_t sec_offset;
+    uint32_t usec_offset;
+    uint32_t nsec_offset;
+
+    // get the current time on the pi
+    clock_gettime(CLOCK_REALTIME, &curr_pi_time);
+
+    sec_offset = target_time.tv_sec - curr_pi_time.tv_sec;
+
+    if (curr_pi_time.tv_nsec > target_time.tv_nsec)
+    {
+        sec_offset--;
+        nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + target_time.tv_nsec;
+    } else
+    {
+        nsec_offset = target_time.tv_nsec - curr_pi_time.tv_nsec;
+    }
+
+    usec_offset = nsec_offset / 1000;
+
+    timer.it_value.tv_sec = sec_offset;
+    timer.it_value.tv_usec = usec_offset;
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
+
+    setitimer (ITIMER_REAL, &timer, NULL);
+    
+    // print out pi's system time and target time
+    printf("Playback should begin at: %s\n\n", time_string);
+
+    printf("pi sec                : %d\n", curr_pi_time.tv_sec);
+    printf("target sec            : %d\n", target_time.tv_sec);
+    printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
+    printf("target nsec           : %d\n", target_time.tv_nsec);
+    printf("sec_offset            : %d\n", sec_offset);
+    printf("usec_offset           : %d\n", usec_offset);
+
+    // END timer logic
 
 	// wait until we're don't playing
 	while ( audio_len > 0 ) {
