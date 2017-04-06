@@ -79,7 +79,8 @@ int main(int argc, char* argv[]){
     char time_string[26];
     uint32_t epoch_target_secs;
 
-    printf("Please enter target epoch time seconds: ");
+    printf("use https://www.epochconverter.com to get epoch time\n");
+    printf("enter target epoch time (sec): ");
     // have the user input the offset in seconds to start playback
     scanf("%d", &epoch_target_secs);
 
