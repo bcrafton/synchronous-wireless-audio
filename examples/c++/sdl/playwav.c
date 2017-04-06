@@ -91,7 +91,8 @@ int main(int argc, char* argv[]){
 
     printf("Current time is: [ %s ]. Please enter offset in seconds: \n", time_string);
     // have the user input the offset in seconds to start playback
-    scanf("%s", &offset);
+    scanf("%d", &offset);
+    printf("offset is: %d seconds\n", offset);
 
     // the target time that we want audio playback to begin
     struct timespec target_time;
