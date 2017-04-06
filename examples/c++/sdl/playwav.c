@@ -77,7 +77,7 @@ int main(int argc, char* argv[]){
 
     // create a buffer so the user can see times of interest
     char time_string[26];
-    uint32_t offset;
+    uint32_t epoch_target_secs;
 
     struct timespec curr_pi_time;
     uint32_t sec_offset;
@@ -87,18 +87,15 @@ int main(int argc, char* argv[]){
     // get the current time on the pi
     clock_gettime(CLOCK_REALTIME, &curr_pi_time);
 
-    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(curr_pi_time.tv_sec)));
-
-    printf("Current time is: [ %s ]. Please enter offset in seconds: \n", time_string);
+    printf("Current time seconds is: &d. Please enter target time seconds: \n", curr_pi_time.tv_sec);
     // have the user input the offset in seconds to start playback
-    scanf("%d", &offset);
-    printf("offset is: %d seconds\n", offset);
+    scanf("%d", &epoch_target_secs);
 
     // the target time that we want audio playback to begin
     struct timespec target_time;
 
     // hardcode an arbitrary future time to start playback
-    target_time.tv_sec = curr_pi_time.tv_sec + offset;
+    target_time.tv_sec = epoch_target_secs;
     target_time.tv_nsec = 0;
 
     sec_offset = target_time.tv_sec - curr_pi_time.tv_sec;
