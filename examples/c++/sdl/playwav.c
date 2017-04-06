@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
     // get the current time on the pi
     clock_gettime(CLOCK_REALTIME, &curr_pi_time);
 
-    printf("Current time seconds is: &d. Please enter target time seconds: \n", curr_pi_time.tv_sec);
+    printf("Current time seconds is: %d. Please enter target time seconds: \n", curr_pi_time.tv_sec);
     // have the user input the offset in seconds to start playback
     scanf("%d", &epoch_target_secs);
 
