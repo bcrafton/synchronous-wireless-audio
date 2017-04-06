@@ -7,6 +7,9 @@
 
 #define NANOSEC_IN_SEC 1000000000L
 
+// arbitrary value for audio playback time
+#define EPOCH_START_SECONDS 1491504900
+
 #define MUS_PATH "../../../sound_files/goat.wav"
 
 // prototype for our audio callback
@@ -79,7 +82,7 @@ int main(int argc, char* argv[]){
     struct timespec target_time;
 
     // hardcode an arbitrary future time to start playback
-    target_time.tv_sec = 1491504109;
+    target_time.tv_sec = EPOCH_START_SECONDS;
     target_time.tv_nsec = 0;
 
     // create a buffer so the user can see the target time
