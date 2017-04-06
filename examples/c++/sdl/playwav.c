@@ -10,7 +10,6 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len);
 static Uint8 *audio_pos; // global pointer to the audio buffer to be played
 static Uint32 audio_len; // remaining length of the sample we have to play
 
-
 /*
 ** PLAYING A SOUND IS MUCH MORE COMPLICATED THAN IT SHOULD BE
 */
@@ -18,23 +17,23 @@ int main(int argc, char* argv[]){
 
 	// Initialize SDL.
 	if (SDL_Init(SDL_INIT_AUDIO) < 0)
-			return 1;
+		return 1;
 
-	// added to test
-	printf("Hello there\n");
+	// added for testing purposes
+	printf("SDL initialized!\n");
 
 	// local variables
 	static Uint32 wav_length; // length of our sample
 	static Uint8 *wav_buffer; // buffer containing our audio file
 	static SDL_AudioSpec wav_spec; // the specs of our piece of music
 	
-	
 	/* Load the WAV */
 	// the specs, length and buffer of our wav are filled
 	if( SDL_LoadWAV(MUS_PATH, &wav_spec, &wav_buffer, &wav_length) == NULL ){
-	  printf("couldn't load wav\n");
+		printf("couldn't load wav\n");
 		return 1;
 	}
+
 	// set the callback function
 	wav_spec.callback = my_audio_callback;
 	wav_spec.userdata = NULL;
@@ -48,9 +47,9 @@ int main(int argc, char* argv[]){
 	audio_len = wav_length; // copy file length
 	
 	/* Open the audio device */
-	if ( SDL_OpenAudio(&wav_spec, NULL) < 0 ){
-	  fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-	  exit(-1);
+	if ( SDL_OpenAudio(&wav_spec, NULL) < 0 ) {
+		fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+		exit(-1);
 	}
 	
 	/* Start playing */
@@ -64,7 +63,6 @@ int main(int argc, char* argv[]){
 	// shut everything down
 	SDL_CloseAudio();
 	SDL_FreeWAV(wav_buffer);
-
 }
 
 // audio callback function
@@ -77,8 +75,12 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len) {
 		return;
 	
 	len = ( len > audio_len ? audio_len : len );
-	SDL_memcpy (stream, audio_pos, len); 					// simply copy from one buffer into the other
-	//SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
+
+	// simply copy from one buffer into the other
+	SDL_memcpy (stream, audio_pos, len);
+
+	// mix from one buffer into another <-- doesn't work properly!!!
+	//SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);
 	
 	audio_pos += len;
 	audio_len -= len;
