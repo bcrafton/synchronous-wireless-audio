@@ -12,6 +12,8 @@ static pthread_mutex_t rbuf_mutex;
 // buffer for reading from tcp socket
 static uint8_t* swap_buf;
 
+bool timer_elapsed = false;
+
 int listen_socket;
 int audio_socket;
 
@@ -127,6 +129,7 @@ void callback(void *userdata, Uint8 *stream, int len)
 void timer_handler (int signum)
 {
     SDL_PauseAudio(0);
+    timer_elapsed = true;
 }
 
 static void* run_tcp_thread(void *data)
@@ -157,87 +160,94 @@ static void* run_tcp_thread(void *data)
                 // SDL_AudioClosed() ???
                 
 #if(!LOCAL_HOST_ONLY)
-        SDL_CloseAudio();
+                SDL_CloseAudio();
 
-        spec.freq = control_data.spec.freq;
-        spec.format = control_data.spec.format;
-        spec.channels = control_data.spec.channels;
-        uint8_t sample_size = spec.format & 0xFF;
-        spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
-        spec.callback = callback;
-        spec.userdata = NULL;
-        
-        if ( SDL_OpenAudio(&spec, NULL) < 0 )
-        {
-            fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-            exit(-1);
-        }
+                spec.freq = control_data.spec.freq;
+                spec.format = control_data.spec.format;
+                spec.channels = control_data.spec.channels;
+                uint8_t sample_size = spec.format & 0xFF;
+                spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
+                spec.callback = callback;
+                spec.userdata = NULL;
+                
+                if ( SDL_OpenAudio(&spec, NULL) < 0 )
+                {
+                    fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+                    exit(-1);
+                }
 
-        struct sigaction sa;
-        struct itimerval timer;
+                struct sigaction sa;
+                struct itimerval timer;
 
-        memset (&sa, 0, sizeof (sa));
-        sa.sa_handler = &timer_handler;
-        sigaction (SIGALRM, &sa, NULL);
+                memset (&sa, 0, sizeof (sa));
+                sa.sa_handler = &timer_handler;
+                sigaction (SIGALRM, &sa, NULL);
 
-        struct timespec curr_pi_time;
-        uint32_t sec_offset;
-        uint32_t usec_offset;
-        uint32_t nsec_offset;
+                struct timespec curr_pi_time;
+                uint32_t sec_offset;
+                uint32_t usec_offset;
+                uint32_t nsec_offset;
 
-        // arbitrarily setting target time to be 7s after server "play" signal time
-        control_data.sec = control_data.sec + 7;
+                // arbitrarily setting target time to be 7s after server "play" signal time
+                control_data.sec = control_data.sec + 7;
 
-        clock_gettime(CLOCK_REALTIME, &curr_pi_time);
+                clock_gettime(CLOCK_REALTIME, &curr_pi_time);
 
-        sec_offset = control_data.sec - curr_pi_time.tv_sec;
+                sec_offset = control_data.sec - curr_pi_time.tv_sec;
 
-        if (curr_pi_time.tv_nsec > control_data.nsec)
-        {
-            sec_offset--;
-            nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + control_data.nsec;
-        } else
-        {
-            nsec_offset = control_data.nsec - curr_pi_time.tv_nsec;
-        }
+                if (curr_pi_time.tv_nsec > control_data.nsec)
+                {
+                    sec_offset--;
+                    nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + control_data.nsec;
+                } 
+                else
+                {
+                    nsec_offset = control_data.nsec - curr_pi_time.tv_nsec;
+                }
 
-        usec_offset = nsec_offset / 1000;
+                usec_offset = nsec_offset / 1000;
 /*
-	if (usec_offset > 250000)
-	{
-		usec_offset = usec_offset - 250000;
-	} else {
-		sec_offset = sec_offset - 1;
-		usec_offset += 750000;
-	}
+	            if (usec_offset > 250000)
+	            {
+		            usec_offset = usec_offset - 250000;
+	            } else {
+		            sec_offset = sec_offset - 1;
+		            usec_offset += 750000;
+	            }
 */
 
-        timer.it_value.tv_sec = sec_offset;
-        timer.it_value.tv_usec = usec_offset;
-        timer.it_interval.tv_sec = 0;
-        timer.it_interval.tv_usec = 0;
+                timer.it_value.tv_sec = sec_offset;
+                timer.it_value.tv_usec = usec_offset;
+                timer.it_interval.tv_sec = 0;
+                timer.it_interval.tv_usec = 0;
 
-        setitimer (ITIMER_REAL, &timer, NULL);
-        
-        // print out pi's system time and target time
-        printf("pi sec                : %d\n", curr_pi_time.tv_sec);
-        printf("target/server +7 sec  : %d\n", control_data.sec);
-        printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
-        printf("target/server nsec    : %d\n", control_data.nsec);
-        printf("sec_offset            : %d\n", sec_offset);
-        printf("usec_offset           : %d\n", usec_offset);
-
-        /*
-        uint32_t target_sec;
-
-        // spin while we wait for cue time
-        do {
-	        clock_gettime(CLOCK_REALTIME, &t);
-	        target_sec = (uint32_t) t.tv_sec;
-        } while (target_sec != control_data.sec);
+                setitimer (ITIMER_REAL, &timer, NULL);
                 
-        SDL_PauseAudio(0);
-        */
+                // print out pi's system time and target time
+                printf("pi sec                : %d\n", curr_pi_time.tv_sec);
+                printf("target/server +7 sec  : %d\n", control_data.sec);
+                printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
+                printf("target/server nsec    : %d\n", control_data.nsec);
+                printf("sec_offset            : %d\n", sec_offset);
+                printf("usec_offset           : %d\n", usec_offset);
+
+                while(!timer_elapsed)
+                {
+                    SDL_Delay(5); 
+                }
+                timer_elapsed = false;
+
+/*
+                uint32_t target_sec;
+
+                // spin while we wait for cue time
+                do {
+	                clock_gettime(CLOCK_REALTIME, &t);
+	                target_sec = (uint32_t) t.tv_sec;
+                } while (target_sec != control_data.sec);
+                        
+                SDL_PauseAudio(0);
+*/
 #endif
             }
             else if(control_data.control_code == PAUSE)
