@@ -16,6 +16,12 @@ int listen_socket;
 int audio_socket;
 
 int main(int argc, char *argv[]) {
+
+    //setup NTP
+    printf("about to copy stuf\n");
+    setup_ntp("192.168.1.1");
+    printf("done\n");
+
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
     {
         return 1;
@@ -45,6 +51,33 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
+}
+
+void setup_ntp(char *ip)
+{
+    int pid = fork();
+    if (pid == 0) //child
+    {
+        char* args[2];
+        args[0] = "cp";
+        args[1] = "ntp.txt";
+        args[2] = "/etc/ntp.conf";
+        execvp(args[0], args);
+    }
+
+    wait(NULL);
+    FILE *fp = fopen("/etc/ntp.conf", "a");
+    fprintf(fp, "server %s iburst\n", ip);
+    fclose(fp);
+
+    pid = fork();
+    if (pid == 0) //child
+    {
+        char* args[1];
+        args[0] = "/etc/init.d/ntp";
+        args[1] = "restart";
+        execvp(args[0], args);
+    }
 }
 
 int read_socket(int socketfd, void* buffer, int size)
