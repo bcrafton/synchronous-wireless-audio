@@ -33,37 +33,11 @@ static pthread_mutex_t packet_lock;
 
 static int ipaddress_compare(void *i1, void *i2);
 
-void setup_ntp()
-{
-    int pid = fork();
-    if (pid == 0) //child
-    {
-        char* args[2];
-        args[0] = "cp";
-        args[1] = "ntp.conf";
-        args[2] = "/etc/ntp.conf";
-        execvp(args[0], args);
-    }
-
-    wait(NULL);
-
-    pid = fork();
-    if (pid == 0) //child
-    {
-        char* args[1];
-        args[0] = "/etc/init.d/ntp";
-        args[1] = "restart";
-        execvp(args[0], args);
-    }
-}
-
 server_status_code_t start()
 {
     // if we started a new thread this list shud be NULL.
     assert(device_list == NULL);
     device_list = list_constructor(&ipaddress_compare);
-
-    setup_ntp();
 
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
     {

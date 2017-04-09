@@ -5,6 +5,8 @@ import Tkinter
 import tkFileDialog
 from Tkinter import *
 from ttk import *
+from subprocess import call
+import filecmp
 import ctypes
 import nmap
 
@@ -12,6 +14,8 @@ import nmap
 class Example(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
+	
+	self.setup_ntp()
 
         self.parent = parent
         self.ips = {}
@@ -79,6 +83,12 @@ class Example(Frame):
 
         play_button = Button(self, text="Play", command=lambda: self.play())
         play_button.pack(side=RIGHT, padx=5, pady=5)
+
+    def setup_ntp(self):
+        file_up_to_date = filecmp.cmp('ntp.conf', '/etc/ntp.conf')
+	if file_up_to_date is False:
+	    call(['cp', 'ntp.conf', '/etc/ntp.conf'])
+	    call(['/etc/init.d/ntp', 'restart'])
 
     def play(self):
         status = self.server.play()
