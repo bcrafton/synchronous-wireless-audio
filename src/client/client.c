@@ -18,9 +18,7 @@ int audio_socket;
 int main(int argc, char *argv[]) {
 
     //setup NTP
-    printf("about to copy stuf\n");
     setup_ntp("192.168.1.1");
-    printf("done\n");
 
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
     {
