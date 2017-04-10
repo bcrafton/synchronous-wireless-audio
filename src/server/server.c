@@ -75,7 +75,7 @@ static void *run(void* user_data)
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
 
-        if(has_packets() && has_devices() && t.tv_sec > wait_time)
+        if(has_packets() && has_devices())// && t.tv_sec > wait_time)
         {
             // you can do this here because it is in sync with current position
             // cannot do this on play however.

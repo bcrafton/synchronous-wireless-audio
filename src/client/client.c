@@ -15,7 +15,15 @@ static uint8_t* swap_buf;
 int listen_socket;
 int audio_socket;
 
-bool timer_set = false;
+// hack stuff
+#define MUS_PATH "../../sound_files/i_like_the_sound_of_that.wav"
+
+void my_audio_callback(void *userdata, Uint8 *stream, int len);
+
+static Uint8 *audio_pos; 
+static Uint32 audio_len; 
+// hack stuff
+
 
 int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
@@ -112,7 +120,7 @@ void wait_for_connection()
 
 void callback(void *userdata, Uint8 *stream, int len)
 {
-	assert(len == FRAME_SIZE);
+	//assert(len == FRAME_SIZE);
 
     pthread_mutex_lock(&rbuf_mutex);
 	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
@@ -122,14 +130,33 @@ void callback(void *userdata, Uint8 *stream, int len)
 	{
 		return;
 	}
-    // copy from one buffer into the other
+
     SDL_memcpy(stream, data, len);
+}
+
+void my_audio_callback(void *userdata, Uint8 *stream, int len)
+{
+    //assert(len == FRAME_SIZE);
+	
+    pthread_mutex_lock(&rbuf_mutex);
+	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
+    pthread_mutex_unlock(&rbuf_mutex);
+
+	if (audio_len == 0)
+    {
+		return;
+    }
+
+	len = ( len > audio_len ? audio_len : len );
+	SDL_memcpy (stream, audio_pos, len);
+	
+	audio_pos += len;
+	audio_len -= len;
 }
 
 void timer_handler (int signum)
 {
     SDL_PauseAudio(0);
-    timer_set = false;
 }
 
 static void* run_tcp_thread(void *data)
@@ -218,6 +245,26 @@ static void* run_tcp_thread(void *data)
 
                 SDL_CloseAudio();
 
+                /////////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////
+
+                static Uint32 wav_length;
+                static Uint8 *wav_buffer;
+
+                if( SDL_LoadWAV(MUS_PATH, &spec, &wav_buffer, &wav_length) == NULL ){
+                  printf("couldn't load wav\n");
+	                exit(-1);
+                }
+
+                spec.callback = my_audio_callback;
+                spec.userdata = NULL;
+
+                audio_pos = wav_buffer; // copy sound buffer
+                audio_len = wav_length; // copy file length
+
+                /////////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////
+/*
                 spec.freq = control_data.spec.freq;
                 spec.format = control_data.spec.format;
                 spec.channels = control_data.spec.channels;
@@ -225,15 +272,15 @@ static void* run_tcp_thread(void *data)
                 spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
                 spec.callback = callback;
                 spec.userdata = NULL;
-                
+*/
+                /////////////////////////////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////
+
                 if ( SDL_OpenAudio(&spec, NULL) < 0 )
                 {
                     fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
                     exit(-1);
                 }
-
-                timer_set = true;
-                while(timer_set == true);
 
 /*
                 uint32_t target_sec;
