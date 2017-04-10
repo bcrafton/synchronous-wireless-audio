@@ -12,10 +12,10 @@ static pthread_mutex_t rbuf_mutex;
 // buffer for reading from tcp socket
 static uint8_t* swap_buf;
 
-bool timer_elapsed = false;
-
 int listen_socket;
 int audio_socket;
+
+bool timer_set = false;
 
 int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0)
@@ -129,7 +129,7 @@ void callback(void *userdata, Uint8 *stream, int len)
 void timer_handler (int signum)
 {
     SDL_PauseAudio(0);
-    timer_elapsed = true;
+    timer_set = false;
 }
 
 static void* run_tcp_thread(void *data)
@@ -160,21 +160,6 @@ static void* run_tcp_thread(void *data)
                 // SDL_AudioClosed() ???
                 
 #if(!LOCAL_HOST_ONLY)
-                SDL_CloseAudio();
-
-                spec.freq = control_data.spec.freq;
-                spec.format = control_data.spec.format;
-                spec.channels = control_data.spec.channels;
-                uint8_t sample_size = spec.format & 0xFF;
-                spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
-                spec.callback = callback;
-                spec.userdata = NULL;
-                
-                if ( SDL_OpenAudio(&spec, NULL) < 0 )
-                {
-                    fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-                    exit(-1);
-                }
 
                 struct sigaction sa;
                 struct itimerval timer;
@@ -207,13 +192,13 @@ static void* run_tcp_thread(void *data)
 
                 usec_offset = nsec_offset / 1000;
 /*
-	            if (usec_offset > 250000)
-	            {
-		            usec_offset = usec_offset - 250000;
-	            } else {
-		            sec_offset = sec_offset - 1;
-		            usec_offset += 750000;
-	            }
+	              if (usec_offset > 250000)
+	              {
+		              usec_offset = usec_offset - 250000;
+	              } else {
+		              sec_offset = sec_offset - 1;
+		              usec_offset += 750000;
+	              }
 */
 
                 timer.it_value.tv_sec = sec_offset;
@@ -231,11 +216,24 @@ static void* run_tcp_thread(void *data)
                 printf("sec_offset            : %d\n", sec_offset);
                 printf("usec_offset           : %d\n", usec_offset);
 
-                while(!timer_elapsed)
+                SDL_CloseAudio();
+
+                spec.freq = control_data.spec.freq;
+                spec.format = control_data.spec.format;
+                spec.channels = control_data.spec.channels;
+                uint8_t sample_size = spec.format & 0xFF;
+                spec.samples = FRAME_SIZE / (sample_size / 8) / spec.channels;
+                spec.callback = callback;
+                spec.userdata = NULL;
+                
+                if ( SDL_OpenAudio(&spec, NULL) < 0 )
                 {
-                    SDL_Delay(5); 
+                    fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+                    exit(-1);
                 }
-                timer_elapsed = false;
+
+                timer_set = true;
+                while(timer_set == true);
 
 /*
                 uint32_t target_sec;
