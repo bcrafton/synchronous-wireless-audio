@@ -15,6 +15,7 @@ void my_audio_callback(void *userdata, Uint8 *stream, int len);
 
 // timer callback function
 void timer_handler (int signum) {
+	printf("starting audio!\n");
 	SDL_PauseAudio(0);
 }
 
