@@ -75,7 +75,7 @@ static void *run(void* user_data)
         struct timespec t;
         clock_gettime(CLOCK_REALTIME, &t);
 
-        if(has_packets() && has_devices())// && t.tv_sec > wait_time)
+        if(has_packets() && has_devices())// && device_list->size == 2)// && t.tv_sec > wait_time)
         {
             // you can do this here because it is in sync with current position
             // cannot do this on play however.
@@ -137,7 +137,7 @@ server_status_code_t set_device(char* ip_address)
     device->serv_addr.sin_family = AF_INET; 
     device->serv_addr.sin_port = htons(PORTNO); 
     device->serv_addr.sin_addr.s_addr = inet_addr(ip_address); 
-    ret = connect(device->sockfd, (struct sockaddr *)&device->serv_addr, sizeof(device->serv_addr)); 
+    ret = connect(device->sockfd, (struct sockaddr *)&device->serv_addr, sizeof(device->serv_addr));
 
     if (ret < 0) 
     { 
@@ -327,13 +327,12 @@ static void broadcast_data(void* buffer, unsigned int size)
     {
       device_t* device = next->value;
 
-/* make sure we are sending the same data.
-      uint32_t* data = (uint32_t*) buffer;
 
-      int i;
-      for(i=50; i<55; i++)
-        printf("%x ", data[i]);
-*/
+      uint32_t* data = (uint32_t*) buffer;
+  
+      // make sure we are sending the same data
+      //printf("%x ", data[50]);
+
       int status = write(device->sockfd, buffer, size);
       if (status < 0)
       {
