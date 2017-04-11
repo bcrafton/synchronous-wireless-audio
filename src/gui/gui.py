@@ -15,7 +15,7 @@ class Example(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
 	
-	self.setup_ntp()
+        #self.setup_ntp()
 
         self.parent = parent
         self.ips = {}
@@ -86,9 +86,9 @@ class Example(Frame):
 
     def setup_ntp(self):
         file_up_to_date = filecmp.cmp('ntp.conf', '/etc/ntp.conf')
-	if file_up_to_date is False:
-	    call(['cp', 'ntp.conf', '/etc/ntp.conf'])
-	    call(['/etc/init.d/ntp', 'restart'])
+        if file_up_to_date is False:
+            call(['cp', 'ntp.conf', '/etc/ntp.conf'])
+            call(['/etc/init.d/ntp', 'restart'])
 
     def play(self):
         status = self.server.play()
@@ -101,7 +101,7 @@ class Example(Frame):
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
         print "Finding all connected nodes..."
-        ip = '10.0.0.0/24'
+        ip = '192.168.0.0/24'
         arguments = '-sP'
 
         nm = nmap.PortScanner()

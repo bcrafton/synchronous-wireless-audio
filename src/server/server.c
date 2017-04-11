@@ -58,23 +58,28 @@ server_status_code_t start()
 static void *run(void* user_data)
 {
     uint32_t packet_size = sizeof(audio_data_packet_t) + FRAME_SIZE * sizeof(uint8_t);
-
     audio_data_packet_t* packet = (audio_data_packet_t*) malloc(packet_size);
 
     packet->header.top = PACKET_HEADER_START;
-    packet->header.size = FRAME_SIZE * sizeof(uint8_t);
+    packet->header.size = FRAME_SIZE * sizeof(uint8_t) + sizeof(audio_frame_t);
     packet->header.code = AUDIO_DATA;
-    
+
     while(1)
     {
-        // probably going to need a lock instead of this static bool for play.
-        // should not be able to stop a song immediatly ... they need to share a lock.
         pthread_mutex_lock(&packet_lock);
-        //printf("%d %d %d\n", has_packets(), has_devices(), curr_length);
-        if(has_packets() && has_devices())
+
+        struct timespec t;
+        clock_gettime(CLOCK_REALTIME, &t);
+
+        if(has_packets() && has_devices() && device_list->size == 2)
         {
-            // this isnt really necessary.
-            memcpy(packet->audio_data, curr_pos, FRAME_SIZE);
+            // you can do this here because it is in sync with current position
+            // cannot do this on play however.
+            packet->frame.id = (uint32_t) curr_pos;
+            packet->frame.sec = 0;
+            packet->frame.nsec = 0;
+
+            memcpy(packet->frame.audio_data, curr_pos, FRAME_SIZE);
 
             broadcast_data(packet, packet_size);
 
@@ -128,7 +133,7 @@ server_status_code_t set_device(char* ip_address)
     device->serv_addr.sin_family = AF_INET; 
     device->serv_addr.sin_port = htons(PORTNO); 
     device->serv_addr.sin_addr.s_addr = inet_addr(ip_address); 
-    ret = connect(device->sockfd, (struct sockaddr *)&device->serv_addr, sizeof(device->serv_addr)); 
+    ret = connect(device->sockfd, (struct sockaddr *)&device->serv_addr, sizeof(device->serv_addr));
 
     if (ret < 0) 
     { 
@@ -193,6 +198,20 @@ server_status_code_t play()
     packet.data.spec.freq = spec.freq;
     packet.data.spec.format = spec.format;    
     packet.data.spec.channels = spec.channels;
+
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+
+    packet.data.sec = t.tv_sec;
+    packet.data.nsec = t.tv_nsec;
+    packet.data.offset = NANOSEC_IN_SEC;
+
+    printf("%lu %d %lu %d\n", t.tv_sec, packet.data.sec, t.tv_nsec, packet.data.nsec);
+
+    // cannot use "curr_pos" because play is not in sync with the packets being sent
+    // start with 0, other than that will need feedback from clients.
+    // like get all the last frames back, and choose the largest one.
+    packet.data.packet_number = 0;
 
     broadcast_data(&packet, sizeof(control_packet_t));
 
@@ -288,28 +307,7 @@ server_status_code_t kill_device(char* ip_address)
     printf("sending control packet\n");
     // send to just one of the devices
     send_data(device, &packet, sizeof(control_packet_t));
-    /*
-    struct linger so_linger;
-    so_linger.l_onoff = 1;
-    so_linger.l_linger = 30;
-    int z = setsockopt(device->sockfd, SOL_SOCKET, SO_LINGER, &so_linger, sizeof(so_linger));
-    if(z)
-    {
-        perror("error");
-    }
-    */
-    // do we wait to confirm it was sent
-    // we dont get the kill code coming up ... think this might be doing it
-    // we NEED TO BREAK HE PROBLEM DOWN
-    // we shud first make the kill code print on the client
-    // then break down the problem, and figure out whats not working and what is
-    // how is it that hard to know to do this?
-    // cant really do this right now, need to connect to the pi
-    
-    // trying to put in a hack to make this thing work ...
-    // dont want sleep for real.
 
-    //sleep(1);
     close(device->sockfd);
 
     return SUCCESS;
@@ -322,12 +320,19 @@ static void broadcast_data(void* buffer, unsigned int size)
     for(next = device_list->head; next != NULL; next = next->next)
     {
       device_t* device = next->value;
+
+
+      //uint32_t* data = (uint32_t*) buffer;
+      // make sure we are sending the same data
+      //printf("%x ", data[50]);
+
       int status = write(device->sockfd, buffer, size);
       if (status < 0)
       {
           perror("Error writing to socket\n");
       }
     }
+    //printf("\n");
     pthread_mutex_unlock(&tcp_lock);
 }
 

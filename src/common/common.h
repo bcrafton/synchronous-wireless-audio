@@ -25,8 +25,14 @@
 #include <fcntl.h>
 #include <SDL2/SDL.h>
 
+#include <time.h>
+#include <sys/time.h>
+#include <signal.h>
+
+#define NANOSEC_IN_SEC 1000000000L
+
 #define PORTNO 51200
-#define FRAME_SIZE 4096
+#define FRAME_SIZE 16384
 
 #define PACKET_HEADER_START 0xDEADBEEF
 
@@ -35,17 +41,10 @@
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
-//typedef unsigned long uint64_t;
-
-/*
-typedef char int8_t;
-typedef short int16_t;
-typedef int int32_t;
-typedef long int64_t;
-*/
+// WE CANNOT USE LONGS, IT IS TOO TRICKY TO WORK BETWEEN PI AND 64 BIT MACHINE BECAUSE THE PI IS 32 BITS
+//typedef unsigned long uint64_t; // this is illegal now
 
 typedef struct sockaddr_in sockaddr_in;
-
 
 //////////////////////////////////
 //////////////////////////////////
@@ -82,9 +81,38 @@ typedef struct sdl_audio_spec{
     uint8_t channels;
 } sdl_audio_spec_t;
 
-typedef struct control_data{
+
+//this is the better way of doing what we want to do
+
+//allows one to extend the original control packet for different control types
+//rather than having one control packet for all the controls and being bloated.
+
+/*
+typedef struct play_config{
+    sdl_audio_spec_t spec;
+    uint64_t time; // this is illegal now
+    uint32_t packet_number;
+} play_config_t;
+
+typedef struct play_control_packet{
+    control_packet_t packet;
+    play_config_t;
+} play_control_packet_t;
+
+typedef struct control_packet{
+    packet_header_t header;
+    control_code_t control_code;
+} control_packet_t;
+*/
+
+typedef struct __attribute__((__packed__)) control_data{
     control_code_t control_code;
     sdl_audio_spec_t spec;
+    // https://www.cs.rutgers.edu/~pxk/416/notes/c-tutorials/gettime.html
+    uint32_t sec;
+    uint32_t nsec;
+    uint32_t offset;
+    uint32_t packet_number;
 } control_data_t;
 
 typedef struct control_packet{
@@ -92,13 +120,21 @@ typedef struct control_packet{
     control_data_t data;
 } control_packet_t;
 
+
 //////////////////////////////////
 //////////////////////////////////
 
+typedef struct __attribute__((__packed__)) audio_frame{
+  uint32_t id;
+  uint32_t sec;
+  uint32_t nsec;
+  // this is a c trick if you dont understand and want to, ask Brian Crafton
+  uint8_t audio_data[];
+} audio_frame_t;
+
 typedef struct audio_data_packet{
     packet_header_t header;
-    // this is a c trick if you dont understand and want to, ask Brian Crafton
-    uint8_t audio_data[];
+    audio_frame_t frame;
 } audio_data_packet_t;
 
 #endif
