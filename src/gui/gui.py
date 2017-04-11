@@ -86,6 +86,9 @@ class Application(Frame):
 		#arguments = '-sT'
 		arguments = '-p 22'
 
+		for item in self.devices.winfo_children():
+			item.destroy()
+
 		nm = nmap.PortScanner()
 		nm.scan(ip, arguments=arguments)
 	
