@@ -33,6 +33,8 @@ static pthread_mutex_t packet_lock;
 
 static int ipaddress_compare(void *i1, void *i2);
 
+static uint32_t num_devices;
+
 server_status_code_t start()
 {
     // if we started a new thread this list shud be NULL.
@@ -71,7 +73,7 @@ static void *run(void* user_data)
         struct timespec t;
         clock_gettime(CLOCK_REALTIME, &t);
 
-        if(has_packets() && has_devices() && device_list->size == 2)
+        if(has_packets() && has_devices())
         {
             // you can do this here because it is in sync with current position
             // cannot do this on play however.
@@ -103,8 +105,10 @@ server_status_code_t set_song(char* filepath)
     return SUCCESS;
 }
 
-server_status_code_t set_device(char* ip_address)
+server_status_code_t set_device(char* ip_address, uint32_t num)
 {
+    num_devices = num;
+
     if(contains_device(ip_address))
     {
         return DEVICE_ALREADY_CONNECTED;
@@ -353,7 +357,7 @@ static void send_data(device_t* device, void* buffer, unsigned int size)
 
 static bool has_devices()
 {
-    return device_list->size != 0;
+    return (device_list->size != 0) && (device_list->size == num_devices);
 }
 
 static bool has_packets()

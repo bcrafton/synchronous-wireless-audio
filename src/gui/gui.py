@@ -65,11 +65,18 @@ class Application(Frame):
 	def update_ip_click(self):
 		i = 0
 
+		num_devices = 0
+		for ip in self.ips:
+			if self.ips[ip].get() is True:
+				num_devices = num_devices + 1
+
+		print "num_devices: " + str(num_devices)
+
 		for ip in self.ips:
 		    print ip, self.ips[ip].get()
 		    if self.ips[ip].get() is True:
 		        self.update_color(-1, self.squares[i])
-		        status = self.server.set_device(ctypes.c_char_p(ip))
+		        status = self.server.set_device(ctypes.c_char_p(ip), ctypes.c_uint(num_devices))
 		    else:
 		        self.update_color(-1, self.squares[i])
 		        status = self.server.kill_device(ctypes.c_char_p(ip))
