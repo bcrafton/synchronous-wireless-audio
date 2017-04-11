@@ -1,1 +1,6 @@
-This will be the directory for all the gui code
+# How to run gui.py
+
+1.	cd into src/gui/ directory
+2.	run "sudo python gui.py XX.XXX.X.0/24"
+	(where XX.XXX.X is network ip to be searched, with .0/24 at end to search entire network)
+	(if no ip entered, will default to 192.168.0.0/24)

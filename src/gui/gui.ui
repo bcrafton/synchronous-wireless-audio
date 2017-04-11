@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='utf-8'?>
+<interface>
+  <object class="tk.Frame" id="Frame_1">
+    <property name="background">#ffffff</property>
+    <property name="height">200</property>
+    <property name="width">200</property>
+    <layout>
+      <property name="column">3</property>
+      <property name="propagate">True</property>
+      <property name="row">7</property>
+    </layout>
+    <child>
+      <object class="tk.Listbox" id="song_list">
+        <property name="height">10</property>
+        <property name="highlightbackground">#d9d9d9</property>
+        <property name="selectbackground">#d9d9d9</property>
+        <property name="selectborderwidth">0</property>
+        <property name="selectmode">single</property>
+        <property name="setgrid">true</property>
+        <property name="width">30</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="padx">5</property>
+          <property name="propagate">True</property>
+          <property name="row">1</property>
+          <property name="rowspan">5</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Button" id="play_button">
+        <property name="command">play_click</property>
+        <property name="font">TkDefaultFont</property>
+        <property name="text" translatable="yes">Play</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="ipadx">34</property>
+          <property name="propagate">True</property>
+          <property name="row">6</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Button" id="stop_button">
+        <property name="command">stop_click</property>
+        <property name="text" translatable="yes">Stop</property>
+        <layout>
+          <property name="column">2</property>
+          <property name="ipadx">34</property>
+          <property name="pady">2</property>
+          <property name="propagate">True</property>
+          <property name="row">6</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Button" id="update_ip_button">
+        <property name="command">update_ip_click</property>
+        <property name="text" translatable="yes">Update IPs</property>
+        <layout>
+          <property name="column">3</property>
+          <property name="ipadx">15</property>
+          <property name="padx">2</property>
+          <property name="propagate">True</property>
+          <property name="row">3</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Button" id="rescan_network_button">
+        <property name="command">rescan_network_click</property>
+        <property name="text" translatable="yes">Rescan Network</property>
+        <layout>
+          <property name="column">3</property>
+          <property name="padx">2</property>
+          <property name="propagate">True</property>
+          <property name="row">4</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Button" id="close_button">
+        <property name="command">close_click</property>
+        <property name="text" translatable="yes">Close</property>
+        <layout>
+          <property name="column">3</property>
+          <property name="ipadx">32</property>
+          <property name="padx">2</property>
+          <property name="propagate">True</property>
+          <property name="row">5</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Label" id="ip_label">
+        <property name="background">#ffffff</property>
+        <property name="text" translatable="yes">Connected Devices:</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="propagate">True</property>
+          <property name="row">0</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Label" id="song_label">
+        <property name="background">#ffffff</property>
+        <property name="text" translatable="yes">Song List:</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="propagate">True</property>
+          <property name="row">0</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Button" id="set_song_button">
+        <property name="command">set_song_click</property>
+        <property name="cursor">arrow</property>
+        <property name="state">normal</property>
+        <property name="text" translatable="yes">Set Song</property>
+        <layout>
+          <property name="column">0</property>
+          <property name="propagate">True</property>
+          <property name="row">6</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Frame" id="device_frame">
+        <property name="background">#ffffff</property>
+        <property name="height">150</property>
+        <property name="width">250</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="columnspan">2</property>
+          <property name="propagate">True</property>
+          <property name="row">1</property>
+          <property name="rowspan">5</property>
+        </layout>
+      </object>
+    </child>
+  </object>
+</interface>
