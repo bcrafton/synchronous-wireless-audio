@@ -1,0 +1,30 @@
+How to set up ntp:
+
+######
+SERVER
+######
+
+note: the following actions all require sudo
+copy /src/server/ntp.conf to /etc/ntp.conf
+restart the ntp server /etc/init.d/ntp restart
+
+query the ntp daemon with "ntpq -p"
+if the server is online, it should list several servers that your ubuntu system is syncing its time to
+if the server is not connected to the internet, the only item in the list should be LOCAL
+
+######
+CLIENT
+######
+
+note: the following actions all require sudo
+copy /src/server/ntp.conf to /etc/ntp.conf
+edit the line: server <ip_address> iburst to reflect the IP of your server
+restart the ntp server /etc/init.d/ntp restart
+
+query the ntp daemon with "ntpq -p"
+for the first few minutes the server will be listed as INIT
+after NTP has synced up the clocks the commmand will list the jitter, offest, and other stuff
+note: the only item in the result should be the hostname or IP of your ubuntu machine NOT the host if you are using a VM
+
+
+If you are having any issues, contact Fouad

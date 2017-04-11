@@ -6,15 +6,15 @@ import tkFileDialog
 from Tkinter import *
 from ttk import *
 import ctypes
+import nmap
 
-#hard_coded_ip_address = "127.0.0.1"
-hard_coded_ip_address = "192.168.0.100"
 
 class Example(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
 
         self.parent = parent
+        self.ips = {}
         self.init_ui()
 
         self.server = ctypes.CDLL('../server/server.so')
@@ -26,12 +26,13 @@ class Example(Frame):
         self.style = Style()
         self.style.theme_use("default")
 
-        ips = self.get_ips()
+        self.ips = self.get_ips()
+        self.squares = []
 
         selections_frame = Frame(self, height=20)
         selections_frame.pack(fill=X)
 
-        ips_frame = Frame(self, height=100, relief=RAISED)
+        ips_frame = Frame(self, height=100)
         ips_frame.pack(fill=X)
 
         button_frame = Frame(self, borderwidth=1)
@@ -46,28 +47,31 @@ class Example(Frame):
         song_location = Entry(selections_frame, width=40, textvariable=song_var)
         song_location.pack(side=LEFT, fill=X, pady=5)
 
-        song_button = Button(selections_frame, text="...", width=3, command=lambda: self.set_file_name(song_var))
+        song_button = Button(selections_frame, text="...", width=3, command=lambda: self.set_song_path(song_var))
         song_button.pack(side=RIGHT, padx=5, pady=5)
 
         ips_label = Label(ips_frame, text="Available Pis: ", width=13)
         ips_label.pack(side=LEFT, padx=5, pady=5)
 
-        ip_list = []
-        check_vars = []
-        ip_address = ""
+        self.canvas = Canvas(ips_frame, width=20, height=100)
+        self.canvas.pack(side=RIGHT)
+        y0 = 0
 
-        for ip in ips:
+        for ip in self.ips:
             var = Tkinter.BooleanVar()
             c = Checkbutton(ips_frame, text=ip, variable=var)
-            c.pack(padx=5, pady=5)
+            c.pack(anchor=N)
             var.set(True)
-            check_vars.append(var)
-            ip_list.append(ip)
+            self.ips[ip] = var
+
+            y1 = 10 + y0
+            self.squares.append(self.canvas.create_rectangle(10, y0, 0, y1, fill="red"))
+            y0 += 20
 
         close_button = Button(self, text="Close", command=self.quit)
         close_button.pack(side=RIGHT, padx=5, pady=5)
 
-        update_ips_button = Button(self, text="Update IPs", command=lambda: self.add_device(ip_address))
+        update_ips_button = Button(self, text="Update IPs", command=lambda: self.update_devices())
         update_ips_button.pack(side=RIGHT, padx=5, pady=5)
 
         stop_button = Button(self, text="Stop", command=lambda: self.stop())
@@ -76,48 +80,68 @@ class Example(Frame):
         play_button = Button(self, text="Play", command=lambda: self.play())
         play_button.pack(side=RIGHT, padx=5, pady=5)
 
-        set_song_button = Button(self, text="Set Song", command=lambda: self.set_song(song_location.get()))
-        set_song_button.pack(side=RIGHT, padx=5, pady=5)
-
-        kill_button = Button(self, text="Kill Device", command=lambda:  self.remove_device(ip_address))
-        kill_button.pack(side=RIGHT, padx=5, pady=5)
-
     def play(self):
         status = self.server.play()
         print "play status: " + str(status)
-
-    def remove_device(self, ip_address):
-        status = self.server.kill_device(ctypes.c_char_p(hard_coded_ip_address))
-        print "kill status: " + str(status)
 
     def stop(self):
         status = self.server.stop()
         print "stop status: " + str(status)
 
-    def set_song(self, song_path):
-        status = self.server.set_song(ctypes.c_char_p(song_path))
-        print "set song status: " + str(status)
-
     def get_ips(self):
         """ Get the ip addresses then return them as a list """
-        ips = ["1", "2", "3"]
-        return ips
+        print "Finding all connected nodes..."
+        ip = '10.0.0.0/24'
+        arguments = '-sP'
 
-    def set_file_name(self, song_var):
+        nm = nmap.PortScanner()
+        nm.scan(ip, arguments=arguments)
+
+        ip_list = {}
+        for h in nm.all_hosts():
+            if 'mac' in nm[h]['addresses'] and 'B8:27:EB' in nm[h]['addresses']['mac'] and 'ipv4' in nm[h]['addresses']:
+                ip_list[nm[h]['addresses']['ipv4']] = True
+        print ip_list
+        return ip_list
+
+    def set_song_path(self, song_var):
         location = tkFileDialog.askopenfilename(initialdir='../../sound_files')
         song_var.set(location)
+        status = self.server.set_song(ctypes.c_char_p(location))
+        print "set song status: " + str(status)
 
-    def add_device(self, ip_address):
-        status = self.server.set_device(ctypes.c_char_p("192.168.0.100"))
-        print "set device status: " + str(status)
-        status = self.server.set_device(ctypes.c_char_p("192.168.0.102"))
-        print "set device status: " + str(status)
+    def update_devices(self):
+        i = 0
+
+        #
+
+        for ip in self.ips:
+            print ip, self.ips[ip].get()
+            if self.ips[ip].get() is True:
+                self.update_color(-1, self.squares[i])
+                status = self.server.set_device(ctypes.c_char_p(ip))
+            else:
+                self.update_color(-1, self.squares[i])
+                status = self.server.kill_device(ctypes.c_char_p(ip))
+            self.update_color(status, self.squares[i])
+            print "set device status: " + str(status)
+            i += 1
+
+    def update_color(self, status, item):
+        if status == -1:
+            self.canvas.itemconfig(item, fill="yellow")
+        elif status == 0:
+            self.canvas.itemconfig(item, fill="green")
+        else:
+            self.canvas.itemconfig(item, fill="red")
+
 
 def main():
     root = Tk()
     root.geometry("500x170+300+300")
     app = Example(root)
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()
