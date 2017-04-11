@@ -1,0 +1,16 @@
+Doc to configure raspberry pi to play audio from usb sound card
+
+1. Shutdown PI
+2. Plug in USB Sound Card into usb port
+3. Turn PI on
+4. make sure sound card has been recognized on device by typing in terminal:
+	"cat /proc/asound/modules"
+	(card should show up as "1 snd_usb_audio")
+5. create config file "sudo nano /etc/modprobe.d/alsa-base.conf"
+6. file should be empty, add these lines of code:
+	options snd_usb_audio index = 0
+	options snd_bcm2835 index=1
+	options snd slots=snd_usb_audio,snd_bcm2835
+7. save file
+8. reboot device
+9. to test, run "aplay XXX.XXX" (where XXX.XXX is a sound file of choice)
