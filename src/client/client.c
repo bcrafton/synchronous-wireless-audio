@@ -137,19 +137,33 @@ void callback(void *userdata, Uint8 *stream, int len)
 void my_audio_callback(void *userdata, Uint8 *stream, int len)
 {
     //assert(len == FRAME_SIZE);
-	
+
     pthread_mutex_lock(&rbuf_mutex);
 	uint8_t* data = read_buffer(rbuf, FRAME_SIZE);
     pthread_mutex_unlock(&rbuf_mutex);
 
-	if (audio_len == 0)
+	if (data == NULL)
+	{
+		return;
+	}
+
+    SDL_memcpy(stream, data, len);
+
+    //printf("%d\n", memcpy(data, audio_pos, len));
+
+    // print out first packet in the actual wav buffer, and the data we are being sent.
+    printf("%x %x\n", audio_pos[0], data[0]);
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+
+    if (audio_len == 0)
     {
 		return;
     }
 
 	len = ( len > audio_len ? audio_len : len );
-	SDL_memcpy (stream, audio_pos, len);
-	
+	//SDL_memcpy (stream, audio_pos, len);
+    
 	audio_pos += len;
 	audio_len -= len;
 }
@@ -218,6 +232,7 @@ static void* run_tcp_thread(void *data)
                 }
 
                 usec_offset = nsec_offset / 1000;
+
 /*
 	              if (usec_offset > 250000)
 	              {
@@ -259,6 +274,8 @@ static void* run_tcp_thread(void *data)
                 spec.callback = my_audio_callback;
                 spec.userdata = NULL;
 
+                uint8_t sample_size = spec.format & 0xFF;
+
                 audio_pos = wav_buffer; // copy sound buffer
                 audio_len = wav_length; // copy file length
 
@@ -275,6 +292,12 @@ static void* run_tcp_thread(void *data)
 */
                 /////////////////////////////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////
+
+                printf("freq %d\n", spec.freq);
+                printf("format %d\n", spec.format);
+                printf("channels %d\n", spec.channels);
+                printf("samples %d\n", spec.samples);
+                printf("sample size %d\n", sample_size);
 
                 if ( SDL_OpenAudio(&spec, NULL) < 0 )
                 {

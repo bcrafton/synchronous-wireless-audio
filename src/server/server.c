@@ -72,8 +72,8 @@ static void *run(void* user_data)
     {
         pthread_mutex_lock(&packet_lock);
 
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
+        struct timespec t;
+        clock_gettime(CLOCK_REALTIME, &t);
 
         if(has_packets() && has_devices())// && t.tv_sec > wait_time)
         {
@@ -326,12 +326,21 @@ static void broadcast_data(void* buffer, unsigned int size)
     for(next = device_list->head; next != NULL; next = next->next)
     {
       device_t* device = next->value;
+
+/* make sure we are sending the same data.
+      uint32_t* data = (uint32_t*) buffer;
+
+      int i;
+      for(i=50; i<55; i++)
+        printf("%x ", data[i]);
+*/
       int status = write(device->sockfd, buffer, size);
       if (status < 0)
       {
           perror("Error writing to socket\n");
       }
     }
+    printf("\n");
     pthread_mutex_unlock(&tcp_lock);
 }
 
