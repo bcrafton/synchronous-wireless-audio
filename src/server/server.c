@@ -33,6 +33,8 @@ static pthread_mutex_t packet_lock;
 
 static int ipaddress_compare(void *i1, void *i2);
 
+static uint32_t wait_time;
+
 static uint32_t num_devices;
 
 server_status_code_t start()
@@ -73,7 +75,7 @@ static void *run(void* user_data)
         struct timespec t;
         clock_gettime(CLOCK_REALTIME, &t);
 
-        if(has_packets() && has_devices())
+        if(has_packets() && has_devices() && t.tv_sec > wait_time)
         {
             // you can do this here because it is in sync with current position
             // cannot do this on play however.
@@ -205,6 +207,8 @@ server_status_code_t play()
 
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
+
+    wait_time = t.tv_sec + 8;
 
     packet.data.sec = t.tv_sec;
     packet.data.nsec = t.tv_nsec;
