@@ -73,16 +73,16 @@ class Application(Frame):
 		print "num_devices: " + str(num_devices)
 
 		for ip in self.ips:
-		    print ip, self.ips[ip].get()
-		    if self.ips[ip].get() is True:
-		        self.update_color(-1, self.squares[i])
-		        status = self.server.set_device(ctypes.c_char_p(ip), ctypes.c_uint(num_devices))
-		    else:
-		        self.update_color(-1, self.squares[i])
-		        status = self.server.kill_device(ctypes.c_char_p(ip))
-		    self.update_color(status, self.squares[i])
-		    print "set device status: " + str(status)
-		    i += 1
+			print ip, self.ips[ip].get()
+			if self.ips[ip].get() is True:
+				self.update_color(-1, self.squares[i])
+				status = self.server.set_device(ctypes.c_char_p(ip), ctypes.c_uint(num_devices))
+			else:
+				self.update_color(0, self.squares[i])
+				status = self.server.kill_device(ctypes.c_char_p(ip))
+			self.update_color(status, self.squares[i])
+
+			i += 1
 
 	def rescan_network_click(self):
 		""" Get the ip addresses then return them as a list """
@@ -90,8 +90,9 @@ class Application(Frame):
 
 		ip = self.network_ip
 		#arguments = '-sP'
-		#arguments = '-sT'
-		arguments = '-p 22'
+		arguments = '-sT'
+		#arguments = '-p 22'
+
 
 		for item in self.devices.winfo_children():
 			item.destroy()
@@ -106,19 +107,19 @@ class Application(Frame):
 		        ip_list[nm[h]['addresses']['ipv4']] = True
 		print ip_list
 		self.ips = ip_list
-
+		
+		self.canvas = Canvas(self.devices, width=100, height=150, highlightthickness=0, bg='white')
+		self.canvas.pack(padx=20, side=RIGHT)
+		y0 = 10
 		for ip in self.ips:
-			check_frame = Tkinter.Frame(self.devices, width=250, bg='white')
-			check_frame.pack(fill=X, padx=20, pady=10)
-			self.canvas = Canvas(check_frame, width=20, height=25, highlightthickness=0, bg='white')
-			self.canvas.pack(side=RIGHT, padx=10)
-
 			var = Tkinter.BooleanVar()
-			c = Tkinter.Checkbutton(check_frame, text=ip, variable=var, highlightthickness=0, bg='white')
+			c = Tkinter.Checkbutton(self.devices, text=ip, variable=var, highlightthickness=0, bg='white', padx=20, pady=7.5)
 			c.pack()
 			var.set(True)
 			self.ips[ip] = var
-			self.squares.append(self.canvas.create_rectangle(0, 2.5, 10, 12.5, fill="red"))
+			y1 = 10 + y0
+			self.squares.append(self.canvas.create_rectangle(0, y0, 10, y1, fill="red"))
+			y0 += 31
 
 	def close_click(self):
 		root.quit()
@@ -130,13 +131,16 @@ class Application(Frame):
 		print "set song status: " + str(status)
 
 	def update_color(self, status, item):
+		print item
 		if status == -1:
-		    self.canvas.itemconfig(item, fill="yellow")
-		elif status == 0:
-		    self.canvas.itemconfig(item, fill="green")
+			self.canvas.itemconfig(item, fill="yellow")
+			print "yellow"
+		elif status == 0 or status == 7:
+		    	self.canvas.itemconfig(item, fill="green")
+			print "green"
 		else:
-		    self.canvas.itemconfig(item, fill="red")
-
+		    	self.canvas.itemconfig(item, fill="red")
+			print "red"
 
 if __name__ == '__main__':
 	root = Tkinter.Tk()
