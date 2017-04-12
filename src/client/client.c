@@ -15,6 +15,8 @@ static uint8_t* swap_buf;
 int listen_socket;
 int audio_socket;
 
+timer_t playback_timer;
+
 int main(int argc, char *argv[]) {
 
     //setup NTP
@@ -191,50 +193,39 @@ static void* run_tcp_thread(void *data)
 #if(!LOCAL_HOST_ONLY)
 
                 struct sigaction sa;
-                struct itimerval timer;
+                struct itimerspec timer_spec;
 
                 memset (&sa, 0, sizeof (sa));
-                sa.sa_handler = &timer_handler;
-                sigaction (SIGALRM, &sa, NULL);
+                sa.sa_flags = SA_SIGINFO;
+                sa.sa_sigaction = timer_handler;
+
+                sigemptyset(&sa.sa_mask);
+                sigaction(SIGRTMIN, &sa, NULL);
+                struct sigevent te;
+                memset(&te, 0, sizeof(struct sigevent));
+
+                te.sigev_notify = SIGEV_SIGNAL;
+                te.sigev_signo = SIGRTMIN;
+                te.sigev_value.sival_ptr = &playback_timer;
+                timer_create(CLOCK_REALTIME, &te, &playback_timer);
 
                 struct timespec curr_pi_time;
-                uint32_t sec_offset;
-                uint32_t usec_offset;
-                uint32_t nsec_offset;
 
                 // arbitrarily setting target time to be 7s after server "play" signal time
                 control_data.sec = control_data.sec + 7;
 
                 clock_gettime(CLOCK_REALTIME, &curr_pi_time);
 
-                sec_offset = control_data.sec - curr_pi_time.tv_sec;
+                timer_spec.it_value.tv_sec = control_data.sec;
+                timer_spec.it_value.tv_nsec = 0;
+                timer_spec.it_interval.tv_sec = 0;
+                timer_spec.it_interval.tv_nsec = 0;
 
-                if (curr_pi_time.tv_nsec > control_data.nsec)
-                {
-                    sec_offset--;
-                    nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + control_data.nsec;
-                } 
-                else
-                {
-                    nsec_offset = control_data.nsec - curr_pi_time.tv_nsec;
-                }
-
-                usec_offset = nsec_offset / 1000;
-
-                timer.it_value.tv_sec = sec_offset;
-                timer.it_value.tv_usec = usec_offset;
-                timer.it_interval.tv_sec = 0;
-                timer.it_interval.tv_usec = 0;
-
-                setitimer (ITIMER_REAL, &timer, NULL);
+                timer_settime(playback_timer, ITIMER_REAL, &timer_spec, NULL);
                 
                 // print out pi's system time and target time
                 printf("pi sec                : %d\n", curr_pi_time.tv_sec);
                 printf("target/server +7 sec  : %d\n", control_data.sec);
-                printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
-                printf("target/server nsec    : %d\n", control_data.nsec);
-                printf("sec_offset            : %d\n", sec_offset);
-                printf("usec_offset           : %d\n", usec_offset);
 
                 SDL_CloseAudio();
 
