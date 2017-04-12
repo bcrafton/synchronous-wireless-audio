@@ -116,7 +116,7 @@ int main(int argc, char* argv[]){
     // usec_offset = nsec_offset / 1000;
 
     timer.it_value.tv_sec = epoch_target_secs;
-    timer.it_value.tv_usec = 0;
+    timer.it_value.tv_nsec = 0;
     timer.it_interval.tv_sec = 0;
     timer.it_interval.tv_nsec = 0;
 
