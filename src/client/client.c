@@ -221,7 +221,7 @@ static void* run_tcp_thread(void *data)
                 timer_spec.it_interval.tv_sec = 0;
                 timer_spec.it_interval.tv_nsec = 0;
 
-                timer_settime(playback_timer, ITIMER_REAL, &timer_spec, NULL);
+                timer_settime(playback_timer, TIMER_ABSTIME, &timer_spec, NULL);
                 
                 // print out pi's system time and target time
                 printf("pi sec                : %d\n", curr_pi_time.tv_sec);
