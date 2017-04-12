@@ -72,7 +72,7 @@ int main(int argc, char* argv[]){
 
 	// BEGIN timer logic
 	struct sigaction sa;
-    struct itimerval timer;
+    struct itimerspec timer;
 
     memset (&sa, 0, sizeof (sa));
     sa.sa_handler = &timer_handler;
@@ -93,11 +93,11 @@ int main(int argc, char* argv[]){
     uint32_t nsec_offset;
 
     // the target time that we want audio playback to begin
-    // struct timespec target_time;
+    struct timespec target_time;
 
-    // // hardcode an arbitrary future time to start playback
-    // target_time.tv_sec = epoch_target_secs;
-    // target_time.tv_nsec = 0;
+    // hardcode an arbitrary future time to start playback
+    target_time.tv_sec = epoch_target_secs;
+    target_time.tv_nsec = 0;
 
     // get the current time on the pi
     // clock_gettime(CLOCK_REALTIME, &curr_pi_time);
@@ -122,15 +122,15 @@ int main(int argc, char* argv[]){
 
     timer_settime(timerID, TIMER_ABSTIME, &timer, NULL);
 
-    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(epoch_target_secs)));
+    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(target_time.tv_sec)));
 
     // print out pi's system time and target time
     printf("Playback should begin at: %s\n\n", time_string);
 
     printf("pi sec                : %d\n", curr_pi_time.tv_sec);
-    printf("target sec            : %d\n", target_time.tv_sec);
+    // printf("target sec            : %d\n", target_time.tv_sec);
     printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
-    printf("target nsec           : %d\n", target_time.tv_nsec);
+    // printf("target nsec           : %d\n", target_time.tv_nsec);
     // printf("sec_offset            : %d\n", sec_offset);
     // printf("usec_offset           : %d\n", usec_offset);
 
