@@ -75,8 +75,18 @@ int main(int argc, char* argv[]){
     struct itimerspec timer;
 
     memset (&sa, 0, sizeof (sa));
-    sa.sa_handler = &timer_handler;
-    sigaction (SIGALRM, &sa, NULL);
+    sa.sa_flags = SA_SIGINFO;
+    sa.sigaction = timer_handler;
+
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGRTMIN, &sa, NULL);
+    struct sigevent te;
+    memset(&te, 0, sizeof(struct sigevent));
+
+    te.sigev_notify = SIGEV_SIGNAL;
+    te.sigev_signo = SIGRTMIN;
+    te.sigev_value.sival_ptr = &timerID;
+    timer_create(CLOCK_REALTIME, &te, &timerID);
 
     // create a buffer so the user can see times of interest
     char time_string[26];
@@ -88,9 +98,6 @@ int main(int argc, char* argv[]){
     scanf("%d", &epoch_target_secs);
 
     struct timespec curr_pi_time;
-    uint32_t sec_offset;
-    uint32_t usec_offset;
-    uint32_t nsec_offset;
 
     // the target time that we want audio playback to begin
     struct timespec target_time;
@@ -98,22 +105,6 @@ int main(int argc, char* argv[]){
     // hardcode an arbitrary future time to start playback
     target_time.tv_sec = epoch_target_secs;
     target_time.tv_nsec = 0;
-
-    // get the current time on the pi
-    // clock_gettime(CLOCK_REALTIME, &curr_pi_time);
-
-    // sec_offset = target_time.tv_sec - curr_pi_time.tv_sec;
-
-    // if (curr_pi_time.tv_nsec > target_time.tv_nsec)
-    // {
-    //     sec_offset--;
-    //     nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + target_time.tv_nsec;
-    // } else
-    // {
-    //     nsec_offset = target_time.tv_nsec - curr_pi_time.tv_nsec;
-    // }
-
-    // usec_offset = nsec_offset / 1000;
 
     timer.it_value.tv_sec = epoch_target_secs;
     timer.it_value.tv_nsec = 0;
@@ -128,11 +119,7 @@ int main(int argc, char* argv[]){
     printf("Playback should begin at: %s\n\n", time_string);
 
     printf("pi sec                : %d\n", curr_pi_time.tv_sec);
-    // printf("target sec            : %d\n", target_time.tv_sec);
     printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
-    // printf("target nsec           : %d\n", target_time.tv_nsec);
-    // printf("sec_offset            : %d\n", sec_offset);
-    // printf("usec_offset           : %d\n", usec_offset);
 
     // END timer logic
 
