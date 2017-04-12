@@ -9,6 +9,8 @@
 
 #define MUS_PATH "../../../sound_files/goat.wav"
 
+timer_t timerID;
+
 // prototype for our audio callback
 // see the implementation for more information
 void my_audio_callback(void *userdata, Uint8 *stream, int len);
@@ -91,36 +93,36 @@ int main(int argc, char* argv[]){
     uint32_t nsec_offset;
 
     // the target time that we want audio playback to begin
-    struct timespec target_time;
+    // struct timespec target_time;
 
-    // hardcode an arbitrary future time to start playback
-    target_time.tv_sec = epoch_target_secs;
-    target_time.tv_nsec = 0;
+    // // hardcode an arbitrary future time to start playback
+    // target_time.tv_sec = epoch_target_secs;
+    // target_time.tv_nsec = 0;
 
     // get the current time on the pi
-    clock_gettime(CLOCK_REALTIME, &curr_pi_time);
+    // clock_gettime(CLOCK_REALTIME, &curr_pi_time);
 
-    sec_offset = target_time.tv_sec - curr_pi_time.tv_sec;
+    // sec_offset = target_time.tv_sec - curr_pi_time.tv_sec;
 
-    if (curr_pi_time.tv_nsec > target_time.tv_nsec)
-    {
-        sec_offset--;
-        nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + target_time.tv_nsec;
-    } else
-    {
-        nsec_offset = target_time.tv_nsec - curr_pi_time.tv_nsec;
-    }
+    // if (curr_pi_time.tv_nsec > target_time.tv_nsec)
+    // {
+    //     sec_offset--;
+    //     nsec_offset = NANOSEC_IN_SEC - curr_pi_time.tv_nsec + target_time.tv_nsec;
+    // } else
+    // {
+    //     nsec_offset = target_time.tv_nsec - curr_pi_time.tv_nsec;
+    // }
 
-    usec_offset = nsec_offset / 1000;
+    // usec_offset = nsec_offset / 1000;
 
-    timer.it_value.tv_sec = sec_offset;
-    timer.it_value.tv_usec = usec_offset;
+    timer.it_value.tv_sec = epoch_target_secs;
+    timer.it_value.tv_usec = 0;
     timer.it_interval.tv_sec = 0;
     timer.it_interval.tv_usec = 0;
 
-    setitimer (ITIMER_REAL, &timer, NULL);
+    timer_settime(timerID, TIMER_ABSTIME, &timer, NULL);
 
-    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(target_time.tv_sec)));
+    strftime(time_string, 26, "%Y-%m-%d %H:%M:%S", localtime(&(epoch_target_secs)));
 
     // print out pi's system time and target time
     printf("Playback should begin at: %s\n\n", time_string);
@@ -129,8 +131,8 @@ int main(int argc, char* argv[]){
     printf("target sec            : %d\n", target_time.tv_sec);
     printf("pi nsec               : %d\n", curr_pi_time.tv_nsec);
     printf("target nsec           : %d\n", target_time.tv_nsec);
-    printf("sec_offset            : %d\n", sec_offset);
-    printf("usec_offset           : %d\n", usec_offset);
+    // printf("sec_offset            : %d\n", sec_offset);
+    // printf("usec_offset           : %d\n", usec_offset);
 
     // END timer logic
 
