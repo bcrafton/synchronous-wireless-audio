@@ -37,7 +37,7 @@ server_status_code_t set_song(char* filepath);
 
 // TODO: change this to add device.
 server_status_code_t set_device(char* ip_address, uint32_t num);
-server_status_code_t kill_device(char* ip_address);
+server_status_code_t kill_device(char* ip_address, uint32_t num);
 
 // TODO: change name of play to play_audio, or think of better names for these that dont conflict
 server_status_code_t play();

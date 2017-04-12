@@ -2,8 +2,6 @@
 <interface>
   <object class="tk.Frame" id="Frame_1">
     <property name="background">#ffffff</property>
-    <property name="height">200</property>
-    <property name="width">200</property>
     <layout>
       <property name="column">3</property>
       <property name="propagate">True</property>
@@ -34,7 +32,7 @@
         <property name="text" translatable="yes">Play</property>
         <layout>
           <property name="column">1</property>
-          <property name="ipadx">34</property>
+          <property name="ipadx">25</property>
           <property name="propagate">True</property>
           <property name="row">6</property>
         </layout>
@@ -46,7 +44,7 @@
         <property name="text" translatable="yes">Stop</property>
         <layout>
           <property name="column">2</property>
-          <property name="ipadx">34</property>
+          <property name="ipadx">25</property>
           <property name="pady">2</property>
           <property name="propagate">True</property>
           <property name="row">6</property>
@@ -56,11 +54,9 @@
     <child>
       <object class="tk.Button" id="update_ip_button">
         <property name="command">update_ip_click</property>
-        <property name="text" translatable="yes">Update IPs</property>
+        <property name="text" translatable="yes">Update Devices</property>
         <layout>
           <property name="column">3</property>
-          <property name="ipadx">15</property>
-          <property name="padx">2</property>
           <property name="propagate">True</property>
           <property name="row">3</property>
         </layout>
@@ -92,17 +88,6 @@
       </object>
     </child>
     <child>
-      <object class="tk.Label" id="ip_label">
-        <property name="background">#ffffff</property>
-        <property name="text" translatable="yes">Connected Devices:</property>
-        <layout>
-          <property name="column">1</property>
-          <property name="propagate">True</property>
-          <property name="row">0</property>
-        </layout>
-      </object>
-    </child>
-    <child>
       <object class="tk.Label" id="song_label">
         <property name="background">#ffffff</property>
         <property name="text" translatable="yes">Song List:</property>
@@ -130,7 +115,7 @@
       <object class="tk.Frame" id="device_frame">
         <property name="background">#ffffff</property>
         <property name="height">150</property>
-        <property name="width">250</property>
+        <property name="width">200</property>
         <layout>
           <property name="column">1</property>
           <property name="columnspan">2</property>
@@ -138,6 +123,29 @@
           <property name="row">1</property>
           <property name="rowspan">5</property>
         </layout>
+      </object>
+    </child>
+    <child>
+      <object class="tk.Frame" id="Frame_2">
+        <property name="height">200</property>
+        <property name="width">200</property>
+        <layout>
+          <property name="column">1</property>
+          <property name="columnspan">2</property>
+          <property name="propagate">True</property>
+          <property name="row">0</property>
+        </layout>
+        <child>
+          <object class="tk.Label" id="ip_label">
+            <property name="background">#fff</property>
+            <property name="text" translatable="yes">Connected Devices:</property>
+            <layout>
+              <property name="column">0</property>
+              <property name="propagate">True</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
       </object>
     </child>
   </object>
