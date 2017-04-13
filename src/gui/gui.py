@@ -7,7 +7,7 @@ from ttk import *
 import ctypes
 import nmap
 from os import listdir
-from os.path import isfile, join
+import time
 
 class Application(Frame):
 	
@@ -63,25 +63,26 @@ class Application(Frame):
         	print "stop status: " + str(status)	
 
 	def update_ip_click(self):
-		i = 0
-
 		num_devices = 0
 		for ip in self.ips:
 			if self.ips[ip].get() is True:
 				num_devices = num_devices + 1
 
-		print "num_devices: " + str(num_devices)
-
+		i = 0
 		for ip in self.ips:
+			current_square = self.squares[i]
+			print "---------------------------------"
 			print ip, self.ips[ip].get()
+
 			if self.ips[ip].get() is True:
-				self.update_color(-1, self.squares[i])
+				self.update_color(current_square, -1)
 				status = self.server.set_device(ctypes.c_char_p(ip), ctypes.c_uint(num_devices))
 			else:
-				self.update_color(0, self.squares[i])
-				status = self.server.kill_device(ctypes.c_char_p(ip))
-			self.update_color(status, self.squares[i])
-
+				self.update_color(current_square, -1)
+				status = self.server.kill_device(ctypes.c_char_p(ip), ctypes.c_uint(num_devices))
+			self.update_color(current_square, status, self.ips[ip].get())
+			print "Device Status: " + str(status)
+			print "---------------------------------"
 			i += 1
 
 	def rescan_network_click(self):
@@ -89,19 +90,23 @@ class Application(Frame):
 		print "Scanning network..."
 
 		ip = self.network_ip
-		#arguments = '-sP'
-		arguments = '-sT'
+
 		#arguments = '-p 22'
+		arguments = '-sn -sP'
 
 
 		for item in self.devices.winfo_children():
 			item.destroy()
 
+		t1 = time.time()
 		nm = nmap.PortScanner()
 		nm.scan(ip, arguments=arguments)
-	
+		t2 = time.time()
+		print "Scan took: %.4f seconds" % (t2-t1)
+
 		print "Finding connected nodes..."
 		ip_list = {}
+
 		for h in nm.all_hosts():
 		    if 'mac' in nm[h]['addresses'] and 'B8:27:EB' in nm[h]['addresses']['mac'] and 'ipv4' in nm[h]['addresses']:
 		        ip_list[nm[h]['addresses']['ipv4']] = True
@@ -118,7 +123,7 @@ class Application(Frame):
 			var.set(True)
 			self.ips[ip] = var
 			y1 = 10 + y0
-			self.squares.append(self.canvas.create_rectangle(0, y0, 10, y1, fill="red"))
+			self.squares.append(self.canvas.create_rectangle(0, y0, 10, y1, fill="black"))
 			y0 += 31
 
 	def close_click(self):
@@ -130,17 +135,26 @@ class Application(Frame):
 		status = self.server.set_song(ctypes.c_char_p('../../sound_files/'+song_path))
 		print "set song status: " + str(status)
 
-	def update_color(self, status, item):
-		print item
+	''' Tests to run:
+		- on startup, uncheck device, update ips, see what status is returned
+		- connect device, disconnect it, update ips, see what status is returned
+		- connect device, disconnect it, disconnect again, update ips, see what status is returned
+		- connect device, set song, play song, stop song, connect different device, play without setting song again
+	'''
+	def update_color(self, item, status, is_set=True):
 		if status == -1:
-			self.canvas.itemconfig(item, fill="yellow")
-			print "yellow"
-		elif status == 0 or status == 7:
-		    	self.canvas.itemconfig(item, fill="green")
-			print "green"
+			fill="yellow"
+		elif is_set:
+			if status in (0, 7):
+				fill = "green"
+			else:
+				fill = "red"
 		else:
-		    	self.canvas.itemconfig(item, fill="red")
-			print "red"
+			if status in (0, 7, 8, 9):
+				fill = "black"
+			else:
+				fill = "red"
+		self.canvas.itemconfig(item, fill=fill)
 
 if __name__ == '__main__':
 	root = Tkinter.Tk()

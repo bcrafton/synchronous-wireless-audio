@@ -291,12 +291,9 @@ server_status_code_t stop()
     return SUCCESS;
 }
 
-server_status_code_t kill_device(char* ip_address)
+server_status_code_t kill_device(char* ip_address, uint32_t num)
 {
-    if(!has_devices())
-    {
-        return NO_CONNECTED_DEVICES;
-    }
+    num_devices = num;
 
     control_packet_t packet;
     
