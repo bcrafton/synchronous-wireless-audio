@@ -54,9 +54,10 @@
     <child>
       <object class="tk.Button" id="update_ip_button">
         <property name="command">update_ip_click</property>
-        <property name="text" translatable="yes">Update Devices</property>
+        <property name="text" translatable="yes">Connect!</property>
         <layout>
           <property name="column">3</property>
+          <property name="ipadx">21</property>
           <property name="propagate">True</property>
           <property name="row">3</property>
         </layout>
